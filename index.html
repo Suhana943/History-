@@ -2,89 +2,89 @@
 <html lang="mr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Master History Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Quiz</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 10px; margin: 0; display: flex; justify-content: center; }
-        
-        .quiz-card { 
-            background: white; padding: 20px; width: 100%; max-width: 500px; 
-            border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-        }
-        
-        h3 { font-size: 1.1rem; color: #333; margin-top: 0; }
-        
-        .btn { 
-            display: block; width: 100%; padding: 16px; margin: 10px 0; 
-            border: 1px solid #ddd; border-radius: 12px; background: white; 
-            cursor: pointer; text-align: left; font-size: 1rem; transition: background 0.2s;
-        }
-        
-        .btn:active { background: #f0f0f0; }
+        body { background: #f0f2f5; font-family: sans-serif; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .quiz-section { width: 100%; max-width: 450px; margin-bottom: 30px; }
+        .quiz-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { display: block; width: 100%; padding: 15px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; background: white; cursor: pointer; text-align: left; }
         .correct { background: #2ecc71 !important; color: white; border: none; }
         .wrong { background: #e74c3c !important; color: white; border: none; }
-        
-        #next-btn { 
-            display: none; background: #007bff; color: white; border: none; 
-            padding: 16px; width: 100%; border-radius: 12px; font-weight: bold; 
-            margin-top: 15px; font-size: 1rem; 
-        }
+        .google-link { display: block; margin-top: 15px; color: #1a73e8; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div id="quiz-container" class="quiz-card">
-    <div id="quiz-content">Loading...</div>
-</div>
+<div id="main-container" style="width: 100%; max-width: 450px;"></div>
 
 <script>
     const files = ["data.json", "quiz.json", "quiz2.json"];
-    let masterList = [];
-    let qIndex = 0;
 
-    async function init() {
-        let responses = await Promise.all(files.map(f => fetch(f).then(r => r.json())));
-        responses.forEach(data => {
+    async function loadAllQuizzes() {
+        const container = document.getElementById('main-container');
+
+        for (let file of files) {
+            let res = await fetch(file);
+            let data = await res.json();
             let items = data.quiz ? data.quiz : data;
-            masterList = masterList.concat(items);
-        });
-        showQ();
-    }
 
-    function showQ() {
-        if(qIndex >= masterList.length) {
-            document.getElementById('quiz-content').innerHTML = `<h3>Quiz khatam! 🎉</h3>`;
-            return;
+            let section = document.createElement('div');
+            section.className = 'quiz-section';
+            section.innerHTML = `<h3>📂 ${file}</h3>`;
+            
+            let card = document.createElement('div');
+            card.className = 'quiz-card';
+            
+            let qIndex = 0;
+            function render() {
+                let qData = items[qIndex];
+                let q = qData.q || qData.question;
+                let o = qData.o || qData.options;
+                let a = qData.a || qData.answer;
+                
+                // Google Link logic: JSON se link lo, ya phir question ko search query bana do
+                let searchLink = qData.link || `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+
+                card.innerHTML = `<p><strong>${qIndex + 1}/${items.length}: ${q}</strong></p>`;
+                
+                o.forEach(opt => {
+                    let btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.innerText = opt;
+                    btn.onclick = () => {
+                        card.querySelectorAll('.btn').forEach(b => b.disabled = true);
+                        if(opt === a) {
+                            btn.classList.add('correct');
+                        } else {
+                            btn.classList.add('wrong');
+                            // Galat hone par Google Link dikhayenge
+                            let linkEl = document.createElement('a');
+                            linkEl.href = searchLink;
+                            linkEl.target = "_blank";
+                            linkEl.className = "google-link";
+                            linkEl.innerText = "🔍 Google par iska jawab samjhein";
+                            card.appendChild(linkEl);
+                        }
+                        // Next button add karna
+                        let next = document.createElement('button');
+                        next.className = 'btn';
+                        next.style.backgroundColor = "#007bff";
+                        next.style.color = "white";
+                        next.innerText = "Next Sawal ➡️";
+                        next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p>Section khatam! 🎉</p>"; };
+                        card.appendChild(next);
+                    };
+                    card.appendChild(btn);
+                });
+            }
+            render();
+            section.appendChild(card);
+            container.appendChild(section);
         }
-
-        let item = masterList[qIndex];
-        let q = item.q || item.question;
-        let o = item.o || item.options;
-        let a = item.a || item.answer;
-
-        document.getElementById('quiz-content').innerHTML = `<h3>Sawal ${qIndex + 1}/${masterList.length}</h3><p>${q}</p>`;
-        
-        o.forEach(opt => {
-            let btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerText = opt;
-            btn.onclick = () => {
-                document.querySelectorAll('.btn').forEach(b => b.disabled = true);
-                if(opt === a) btn.classList.add('correct');
-                else btn.classList.add('wrong');
-                document.getElementById('next-btn').style.display = 'block';
-            };
-            document.getElementById('quiz-content').appendChild(btn);
-        });
-
-        let next = document.createElement('button');
-        next.id = "next-btn";
-        next.innerText = "Next Sawal ➡️";
-        next.onclick = () => { qIndex++; showQ(); };
-        document.getElementById('quiz-content').appendChild(next);
     }
-    init();
+
+    loadAllQuizzes();
 </script>
 </body>
 </html>
