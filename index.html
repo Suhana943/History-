@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History Quiz</title>
+    <title>History Quiz Suite</title>
     <style>
         body { background: #f0f2f5; font-family: sans-serif; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .quiz-section { width: 100%; max-width: 450px; margin-bottom: 30px; }
@@ -12,6 +12,7 @@
         .correct { background: #2ecc71 !important; color: white; border: none; }
         .wrong { background: #e74c3c !important; color: white; border: none; }
         .google-link { display: block; margin-top: 15px; color: #1a73e8; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .next-btn { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -25,62 +26,60 @@
         const container = document.getElementById('main-container');
 
         for (let file of files) {
-            let res = await fetch(file);
-            let data = await res.json();
-            let items = data.quiz ? data.quiz : data;
+            try {
+                let res = await fetch(file);
+                let data = await res.json();
+                let items = data.quiz ? data.quiz : data;
 
-            let section = document.createElement('div');
-            section.className = 'quiz-section';
-            section.innerHTML = `<h3>📂 ${file}</h3>`;
-            
-            let card = document.createElement('div');
-            card.className = 'quiz-card';
-            
-            let qIndex = 0;
-            function render() {
-                let qData = items[qIndex];
-                let q = qData.q || qData.question;
-                let o = qData.o || qData.options;
-                let a = qData.a || qData.answer;
+                let section = document.createElement('div');
+                section.className = 'quiz-section';
+                section.innerHTML = `<h3>📂 ${file}</h3>`;
                 
-                // Google Link logic: JSON se link lo, ya phir question ko search query bana do
-                let searchLink = qData.link || `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+                let card = document.createElement('div');
+                card.className = 'quiz-card';
+                
+                let qIndex = 0;
+                function render() {
+                    let qData = items[qIndex];
+                    let q = qData.q || qData.question;
+                    let o = qData.o || qData.options;
+                    let a = qData.a || qData.answer;
+                    let searchLink = qData.link || `https://www.google.com/search?q=${encodeURIComponent(q)}`;
 
-                card.innerHTML = `<p><strong>${qIndex + 1}/${items.length}: ${q}</strong></p>`;
-                
-                o.forEach(opt => {
-                    let btn = document.createElement('button');
-                    btn.className = 'btn';
-                    btn.innerText = opt;
-                    btn.onclick = () => {
-                        card.querySelectorAll('.btn').forEach(b => b.disabled = true);
-                        if(opt === a) {
-                            btn.classList.add('correct');
-                        } else {
-                            btn.classList.add('wrong');
-                            // Galat hone par Google Link dikhayenge
-                            let linkEl = document.createElement('a');
-                            linkEl.href = searchLink;
-                            linkEl.target = "_blank";
-                            linkEl.className = "google-link";
-                            linkEl.innerText = "🔍 Google par iska jawab samjhein";
-                            card.appendChild(linkEl);
-                        }
-                        // Next button add karna
-                        let next = document.createElement('button');
-                        next.className = 'btn';
-                        next.style.backgroundColor = "#007bff";
-                        next.style.color = "white";
-                        next.innerText = "Next Sawal ➡️";
-                        next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p>Section khatam! 🎉</p>"; };
-                        card.appendChild(next);
-                    };
-                    card.appendChild(btn);
-                });
+                    card.innerHTML = `<p><strong>${qIndex + 1}/${items.length}: ${q}</strong></p>`;
+                    
+                    o.forEach(opt => {
+                        let btn = document.createElement('button');
+                        btn.className = 'btn';
+                        btn.innerText = opt;
+                        btn.onclick = () => {
+                            card.querySelectorAll('.btn').forEach(b => b.disabled = true);
+                            if(opt === a) {
+                                btn.classList.add('correct');
+                            } else {
+                                btn.classList.add('wrong');
+                                let linkEl = document.createElement('a');
+                                linkEl.href = searchLink;
+                                linkEl.target = "_blank";
+                                linkEl.className = "google-link";
+                                linkEl.innerText = "🔍 Google par iska jawab samjhein";
+                                card.appendChild(linkEl);
+                            }
+                            let next = document.createElement('button');
+                            next.className = 'next-btn';
+                            next.innerText = "Next Sawal ➡️";
+                            next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p>Section khatam! 🎉</p>"; };
+                            card.appendChild(next);
+                        };
+                        card.appendChild(btn);
+                    });
+                }
+                render();
+                section.appendChild(card);
+                container.appendChild(section);
+            } catch(err) {
+                console.error("Error loading " + file, err);
             }
-            render();
-            section.appendChild(card);
-            container.appendChild(section);
         }
     }
 
