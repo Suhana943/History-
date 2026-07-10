@@ -12,6 +12,7 @@
         .correct { background: #2ecc71 !important; color: white; border: none; }
         .wrong { background: #e74c3c !important; color: white; border: none; }
         .next-btn { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer; }
+        .google-btn { background: #f8f9fa; color: #1a73e8; border: 1px solid #1a73e8; padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer; text-decoration: none; display: block; text-align: center; }
     </style>
 </head>
 <body>
@@ -25,49 +26,62 @@
         const container = document.getElementById('main-container');
 
         for (let file of files) {
-            let res = await fetch(file);
-            let rawData = await res.json();
-            
-            // SMART DETECTION: Agar 'quiz' property hai toh use lo, nahi toh pura data lo
-            let items = rawData.quiz ? rawData.quiz : rawData;
+            try {
+                let res = await fetch(file);
+                let rawData = await res.json();
+                let items = rawData.quiz ? rawData.quiz : rawData;
 
-            let section = document.createElement('div');
-            section.className = 'quiz-section';
-            section.innerHTML = `<h3>📂 ${file}</h3>`;
-            
-            let card = document.createElement('div');
-            card.className = 'quiz-card';
-            
-            let qIndex = 0;
-            function render() {
-                let qData = items[qIndex];
-                let q = qData.q || qData.question;
-                let o = qData.o || qData.options;
-                let a = qData.a || qData.answer;
-
-                card.innerHTML = `<p><strong>${qIndex + 1}/${items.length}: ${q}</strong></p>`;
+                let section = document.createElement('div');
+                section.className = 'quiz-section';
+                section.innerHTML = `<h3>📂 ${file}</h3>`;
                 
-                o.forEach(opt => {
-                    let btn = document.createElement('button');
-                    btn.className = 'btn';
-                    btn.innerText = opt;
-                    btn.onclick = () => {
-                        card.querySelectorAll('.btn').forEach(b => b.disabled = true);
-                        if(opt === a) btn.classList.add('correct');
-                        else btn.classList.add('wrong');
-                        
-                        let next = document.createElement('button');
-                        next.className = 'next-btn';
-                        next.innerText = "Next Sawal ➡️";
-                        next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p>Section khatam! 🎉</p>"; };
-                        card.appendChild(next);
-                    };
-                    card.appendChild(btn);
-                });
-            }
-            render();
-            section.appendChild(card);
-            container.appendChild(section);
+                let card = document.createElement('div');
+                card.className = 'quiz-card';
+                
+                let qIndex = 0;
+                function render() {
+                    let qData = items[qIndex];
+                    let q = qData.q || qData.question;
+                    let o = qData.o || qData.options;
+                    let a = qData.a || qData.answer;
+                    
+                    // Google Search Link
+                    let googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+
+                    card.innerHTML = `<p><strong>${qIndex + 1}/${items.length}: ${q}</strong></p>`;
+                    
+                    o.forEach(opt => {
+                        let btn = document.createElement('button');
+                        btn.className = 'btn';
+                        btn.innerText = opt;
+                        btn.onclick = () => {
+                            card.querySelectorAll('.btn').forEach(b => b.disabled = true);
+                            if(opt === a) {
+                                btn.classList.add('correct');
+                            } else {
+                                btn.classList.add('wrong');
+                                // Galat hone par Google Link dikhao
+                                let gLink = document.createElement('a');
+                                gLink.className = 'google-btn';
+                                gLink.href = googleSearchUrl;
+                                gLink.target = "_blank";
+                                gLink.innerText = "🔍 Google par samjhein";
+                                card.appendChild(gLink);
+                            }
+                            
+                            let next = document.createElement('button');
+                            next.className = 'next-btn';
+                            next.innerText = "Next Sawal ➡️";
+                            next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p>Section khatam! 🎉</p>"; };
+                            card.appendChild(next);
+                        };
+                        card.appendChild(btn);
+                    });
+                }
+                render();
+                section.appendChild(card);
+                container.appendChild(section);
+            } catch(e) { console.error("Error loading " + file, e); }
         }
     }
     loadAllQuizzes();
