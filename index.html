@@ -3,63 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History Quiz</title>
+    <title>History Revision Quiz</title>
     <style>
-        body { background: #f8fbff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
         
         #quiz-box { 
             background: white; padding: 25px; width: 100%; max-width: 400px; 
-            border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
             box-sizing: border-box; text-align: center;
         }
+
+        .header { margin-bottom: 20px; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        .header h1 { color: #1a237e; font-size: 1.4rem; margin: 0; }
         
-        .points-box { background: #e3f2fd; color: #0277bd; padding: 10px; font-weight: bold; border-radius: 10px; margin-bottom: 15px; }
-        #timer { color: #d32f2f; font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; }
+        .stats-top { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; color: #555; }
         
-        .question-card { border-left: 5px solid #007bff; padding-left: 15px; margin-bottom: 20px; text-align: left; }
-        h3 { color: #333; margin-top: 0; }
+        /* Progress Bar */
+        .progress-container { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #007bff; transition: width 0.4s; }
         
-        .btn { 
-            display: block; width: 100%; padding: 15px; margin: 10px 0; 
-            border: 2px solid #e0e0e0; border-radius: 12px; background: white; 
-            cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; 
-        }
-        .btn:hover { border-color: #007bff; background: #f1f8ff; }
+        .question-card { text-align: left; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; }
+        .btn:hover { border-color: #007bff; background: #f8fbff; }
         
         .correct { background: #2ecc71 !important; color: white; border-color: #2ecc71; }
         .wrong { background: #e74c3c !important; color: white; border-color: #e74c3c; }
         
-        #google-link { 
-            display: none; margin-top: 15px; padding: 12px; background: #4285f4; 
-            color: white; text-decoration: none; border-radius: 8px; font-weight: bold; 
-        }
+        .stats-footer { display: flex; justify-content: space-around; padding-top: 15px; border-top: 1px solid #eee; color: #7f8c8d; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div id="quiz-box">
-    <div class="points-box" id="points">Points: 0</div>
-    <div id="timer">Time: 15s</div>
-    <div id="question-card" class="question-card">
+    <div class="header"><h1>📚 History Revision</h1></div>
+    
+    <div class="stats-top">
+        <div id="points">Points: 0</div>
+        <div id="total-timer">Time: 0s</div>
+    </div>
+    
+    <div class="progress-container"><div id="progress-bar"></div></div>
+
+    <div class="question-card">
         <h3 id="question">Loading...</h3>
         <div id="options"></div>
         <div id="feedback" style="margin-top:10px; font-weight:bold;"></div>
-        <a id="google-link" href="#" target="_blank">🔍 Google par samjhein</a>
+    </div>
+
+    <div class="stats-footer">
+        <div>Progress: <span id="progress-text">0/0</span></div>
+        <div>Accuracy: <span id="accuracy">100%</span></div>
     </div>
 </div>
 
 <script>
-    let quizData = [], currentQ = 0, points = 0, timeLeft = 15, timerInterval;
+    let quizData = [], currentQ = 0, points = 0, seconds = 0, totalAttempted = 0, timerInterval;
 
-    // JSON Load karna
+    timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('total-timer').innerText = `Time: ${seconds}s`;
+    }, 1000);
+
     fetch('data.json')
         .then(res => res.json())
         .then(data => { quizData = data; loadQuestion(); });
 
     function loadQuestion() {
-        clearInterval(timerInterval);
         if (currentQ >= quizData.length) {
-            document.getElementById('quiz-box').innerHTML = `<h2>Quiz Khatam! 🎉</h2><p>Total Points: ${points}</p>`;
+            clearInterval(timerInterval);
+            document.getElementById('quiz-box').innerHTML = `<h2>Quiz Complete! 🎉</h2><p>Points: ${points}</p><p>Total Time: ${seconds}s</p>`;
             return;
         }
         
@@ -67,54 +79,40 @@
         document.getElementById('question').innerText = `${currentQ + 1}. ${qData.q}`;
         document.getElementById('options').innerHTML = '';
         document.getElementById('feedback').innerText = '';
-        document.getElementById('google-link').style.display = 'none';
+        
+        // Progress Bar Update
+        let progress = ((currentQ) / quizData.length) * 100;
+        document.getElementById('progress-bar').style.width = progress + "%";
+        document.getElementById('progress-text').innerText = `${currentQ}/${quizData.length}`;
         
         qData.o.forEach(opt => {
             let btn = document.createElement('button');
             btn.className = 'btn';
             btn.innerText = opt;
-            btn.onclick = () => checkAnswer(btn, opt === qData.a, qData.link);
+            btn.onclick = () => checkAnswer(btn, opt === qData.a);
             document.getElementById('options').appendChild(btn);
         });
-        startTimer();
     }
 
-    function startTimer() {
-        timeLeft = 15;
-        document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
-            if (timeLeft <= 0) { 
-                clearInterval(timerInterval); 
-                document.getElementById('feedback').innerText = "⏳ Time Khatam!";
-                setTimeout(nextQuestion, 2000); 
-            }
-        }, 1000);
-    }
-
-    function checkAnswer(btn, isCorrect, link) {
-        clearInterval(timerInterval);
+    function checkAnswer(btn, isCorrect) {
+        totalAttempted++;
         document.querySelectorAll('.btn').forEach(b => b.disabled = true);
         
         if (isCorrect) {
             btn.classList.add('correct');
-            document.getElementById('feedback').innerText = "✅ Sahi Jawab!";
             points++;
             document.getElementById('points').innerText = `Points: ${points}`;
+            document.getElementById('feedback').innerText = "✅ Sahi Jawab!";
         } else {
             btn.classList.add('wrong');
             document.getElementById('feedback').innerText = "❌ Galat Jawab!";
-            const gLink = document.getElementById('google-link');
-            gLink.href = link;
-            gLink.style.display = 'block';
         }
-        setTimeout(nextQuestion, 4000);
-    }
-
-    function nextQuestion() {
-        currentQ++;
-        loadQuestion();
+        
+        // Accuracy Update
+        let acc = Math.round((points / totalAttempted) * 100);
+        document.getElementById('accuracy').innerText = acc + "%";
+        
+        setTimeout(() => { currentQ++; loadQuestion(); }, 1500);
     }
 </script>
 </body>
