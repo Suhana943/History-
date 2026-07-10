@@ -3,16 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History Quiz</title>
+    <title>आधुनिक महाराष्ट्र इतिहास क्विझ</title>
     <style>
-        body { background: #f0f2f5; font-family: sans-serif; padding: 10px; }
-        .quiz-section { width: 100%; max-width: 450px; margin: 0 auto 30px auto; }
-        .quiz-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn { display: block; width: 100%; padding: 15px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; background: white; cursor: pointer; text-align: left; }
-        .correct { background: #2ecc71 !important; color: white; border: none; }
-        .wrong { background: #e74c3c !important; color: white; border: none; }
-        .next-btn { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer; }
-        .google-btn { background: #f8f9fa; color: #1a73e8; border: 1px solid #1a73e8; padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer; text-decoration: none; display: block; text-align: center; }
+        /* Modern Design System */
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body { 
+            background: var(--bg); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            color: var(--text);
+            margin: 0; 
+            padding: 20px; 
+        }
+
+        .quiz-section { 
+            width: 100%; 
+            max-width: 500px; 
+            margin: 0 auto 40px auto; 
+        }
+
+        .section-title {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .quiz-card { 
+            background: var(--card-bg); 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .btn { 
+            display: block; 
+            width: 100%; 
+            padding: 14px; 
+            margin: 10px 0; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 12px; 
+            background: white; 
+            cursor: pointer; 
+            text-align: left;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover:not(:disabled) { border-color: var(--primary); background: #eef2ff; }
+        
+        .correct { background: var(--success) !important; color: white; border-color: var(--success); }
+        .wrong { background: var(--error) !important; color: white; border-color: var(--error); }
+
+        .next-btn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 14px; 
+            width: 100%; 
+            border-radius: 12px; 
+            margin-top: 20px; 
+            font-weight: 600;
+            cursor: pointer; 
+        }
+
+        .google-btn { 
+            background: #f1f5f9; 
+            color: var(--primary); 
+            border: 1px solid var(--primary); 
+            padding: 12px; 
+            width: 100%; 
+            border-radius: 12px; 
+            margin-top: 10px; 
+            text-decoration: none; 
+            display: block; 
+            text-align: center; 
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -33,7 +117,7 @@
 
                 let section = document.createElement('div');
                 section.className = 'quiz-section';
-                section.innerHTML = `<h3>📂 ${file}</h3>`;
+                section.innerHTML = `<div class="section-title">📂 ${file}</div>`;
                 
                 let card = document.createElement('div');
                 card.className = 'quiz-card';
@@ -45,10 +129,7 @@
                     let o = qData.o || qData.options;
                     let a = qData.a || qData.answer;
                     
-                    // Google Search Link
-                    let googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
-
-                    card.innerHTML = `<p><strong>${qIndex + 1}/${items.length}: ${q}</strong></p>`;
+                    card.innerHTML = `<div class="question-text">${qIndex + 1}. ${q}</div>`;
                     
                     o.forEach(opt => {
                         let btn = document.createElement('button');
@@ -60,19 +141,18 @@
                                 btn.classList.add('correct');
                             } else {
                                 btn.classList.add('wrong');
-                                // Galat hone par Google Link dikhao
                                 let gLink = document.createElement('a');
                                 gLink.className = 'google-btn';
-                                gLink.href = googleSearchUrl;
+                                gLink.href = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
                                 gLink.target = "_blank";
-                                gLink.innerText = "🔍 Google par samjhein";
+                                gLink.innerText = "🔍 अधिक माहितीसाठी Google शोधा";
                                 card.appendChild(gLink);
                             }
                             
                             let next = document.createElement('button');
                             next.className = 'next-btn';
-                            next.innerText = "Next Sawal ➡️";
-                            next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p>Section khatam! 🎉</p>"; };
+                            next.innerText = (qIndex + 1 === items.length) ? "सत्र पूर्ण झाले! 🎉" : "पुढील प्रश्न ➡️";
+                            next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p style='text-align:center;'>सत्र समाप्त! तुम्ही सर्व प्रश्न पूर्ण केले आहेत. 🎉</p>"; };
                             card.appendChild(next);
                         };
                         card.appendChild(btn);
