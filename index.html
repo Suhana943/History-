@@ -13,34 +13,29 @@
             box-sizing: border-box; text-align: center;
         }
 
-        /* Naya: Topic Header space cover karne ke liye */
         .topic-info { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e9ecef; }
-        .topic-info h2 { font-size: 1.1rem; color: #444; margin: 0; }
-        
         .stats-top { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: #555; }
         
         .progress-container { width: 100%; height: 10px; background: #eee; border-radius: 5px; margin-bottom: 25px; overflow: hidden; }
         #progress-bar { width: 0%; height: 100%; background: #007bff; transition: width 0.4s; }
         
-        .question-card { text-align: left; margin-bottom: 25px; min-height: 250px; } /* Min-height se box bada rahega */
+        .question-card { text-align: left; margin-bottom: 25px; min-height: 250px; }
         .btn { display: block; width: 100%; padding: 16px; margin: 12px 0; border: 2px solid #e0e0e0; border-radius: 15px; background: white; cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; }
         .btn:hover { border-color: #007bff; background: #f8fbff; }
         
         .correct { background: #2ecc71 !important; color: white; border-color: #2ecc71; }
-        .wrong { background: #e74c3c !important; color: white; border-color: #e74c3c; }
+        .wrong { background: #e74c3c !important; color: white; border-color: #2ecc71; }
         
         #google-link { display: none; margin-top: 15px; padding: 14px; background: #4285f4; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; width: 100%; box-sizing: border-box; }
         
-        /* Naya: Footer space bharne ke liye */
         .stats-footer { display: flex; justify-content: space-between; padding-top: 20px; border-top: 2px solid #f0f2f5; color: #7f8c8d; font-size: 0.9rem; }
-        .motivational-quote { margin-top: 20px; font-style: italic; color: #999; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
 <div id="quiz-box">
     <div class="topic-info">
-        <h2>📜 Aaj ka Topic: Modern Indian History</h2>
+        <h2 id="quiz-title">History Revision</h2>
     </div>
     
     <div class="stats-top">
@@ -51,22 +46,26 @@
     <div class="progress-container"><div id="progress-bar"></div></div>
 
     <div class="question-card">
-        <h3 id="question">Loading questions...</h3>
+        <h3 id="question">Loading...</h3>
         <div id="options"></div>
         <div id="feedback" style="margin-top:15px; font-weight:bold;"></div>
         <a id="google-link" href="#" target="_blank">🔍 Google par samjhein</a>
     </div>
 
     <div class="stats-footer">
-        <div>Progress: <span id="progress-text">0/0</span></div>
-        <div>Accuracy: <span id="accuracy">100%</span></div>
+        <div>Total Quiz Solved: <span id="total-solved">0</span></div>
+        <div>Best Score: <span id="best-score">0</span></div>
     </div>
-    
-    <div class="motivational-quote">"Har din ka thoda-thoda gyaan, safalta ka raasta hai."</div>
 </div>
 
 <script>
-    let quizData = [], currentQ = 0, points = 0, seconds = 0, totalAttempted = 0, timerInterval;
+    let quizData = [], currentQ = 0, points = 0, seconds = 0, timerInterval;
+
+    // Quiz count aur High Score load karna
+    let totalSolved = localStorage.getItem('totalSolved') || 0;
+    let bestScore = localStorage.getItem('bestScore') || 0;
+    document.getElementById('total-solved').innerText = totalSolved;
+    document.getElementById('best-score').innerText = bestScore;
 
     timerInterval = setInterval(() => {
         seconds++;
@@ -80,8 +79,17 @@
     function loadQuestion() {
         if (currentQ >= quizData.length) {
             clearInterval(timerInterval);
+            
+            // Stats update karna
+            totalSolved++;
+            if (points > bestScore) {
+                bestScore = points;
+                localStorage.setItem('bestScore', bestScore);
+            }
+            localStorage.setItem('totalSolved', totalSolved);
+            
             document.getElementById('quiz-box').innerHTML = `
-                <h2 style="color:#007bff">Quiz Complete! 🎉</h2>
+                <h2>Quiz Complete! 🎉</h2>
                 <p>Final Points: ${points}</p>
                 <p>Time Taken: ${seconds}s</p>
                 <button class="btn" onclick="location.reload()">Dobara Shuru Karein</button>
@@ -97,7 +105,6 @@
         
         let progress = ((currentQ) / quizData.length) * 100;
         document.getElementById('progress-bar').style.width = progress + "%";
-        document.getElementById('progress-text').innerText = `${currentQ}/${quizData.length}`;
         
         qData.o.forEach(opt => {
             let btn = document.createElement('button');
@@ -109,9 +116,7 @@
     }
 
     function checkAnswer(btn, isCorrect, link) {
-        totalAttempted++;
         document.querySelectorAll('.btn').forEach(b => b.disabled = true);
-        
         if (isCorrect) {
             btn.classList.add('correct');
             points++;
@@ -124,10 +129,6 @@
             gLink.href = link;
             gLink.style.display = 'inline-block';
         }
-        
-        let acc = Math.round((points / totalAttempted) * 100);
-        document.getElementById('accuracy').innerText = acc + "%";
-        
         setTimeout(() => { currentQ++; loadQuestion(); }, 3000);
     }
 </script>
