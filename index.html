@@ -6,26 +6,26 @@
     <title>Modern Quiz App</title>
     <style>
         :root { --primary: #6366f1; --bg: #f8fafc; --card-bg: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
 
-        .navbar { background: white; padding: 10px; display: flex; gap: 8px; overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; border-radius: 12px; }
-        .nav-btn { background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 15px; cursor: pointer; white-space: nowrap; font-weight: 600; font-size: 0.9rem; }
+        .navbar { background: white; padding: 15px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .nav-btn { background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-weight: 600; transition: 0.3s; }
         .nav-btn.active { background: var(--primary); color: white; }
 
-        .container { max-width: 450px; margin: 15px auto; }
-        .points-box { background: #dbeafe; color: #1e40af; text-align: center; padding: 10px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
+        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; }
+        .points-box { background: #dbeafe; color: #1e40af; text-align: center; padding: 12px; border-radius: 15px; font-weight: bold; margin-bottom: 20px; }
         
-        .quiz-card { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .question-text { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; line-height: 1.4; }
+        .quiz-card { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+        .question-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 25px; }
         
-        .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; cursor: pointer; font-size: 0.95rem; text-align: left; }
-        .btn:hover:not(:disabled) { border-color: var(--primary); background: #f5f3ff; }
+        .btn { display: block; width: 100%; padding: 16px; margin: 12px 0; border: 2px solid #f1f5f9; border-radius: 16px; background: #f8fafc; cursor: pointer; transition: 0.3s; }
+        .btn:hover:not(:disabled) { border-color: var(--primary); background: #eef2ff; }
         
         .correct { background: #22c55e !important; color: white; border: none; }
         .wrong { background: #ef4444 !important; color: white; border: none; }
 
-        .next-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 12px; margin-top: 10px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-        .google-btn { background: #ffffff; color: var(--primary); border: 1.5px solid var(--primary); padding: 10px; width: 100%; border-radius: 12px; margin-top: 10px; text-decoration: none; display: block; text-align: center; font-weight: 600; font-size: 0.9rem; }
+        .next-btn { background: var(--primary); color: white; border: none; padding: 16px; width: 100%; border-radius: 16px; margin-top: 15px; font-weight: 600; cursor: pointer; }
+        .google-btn { background: #ffffff; color: var(--primary); border: 2px solid var(--primary); padding: 14px; width: 100%; border-radius: 16px; margin-top: 10px; text-decoration: none; display: block; text-align: center; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -86,15 +86,17 @@
                     gLink.innerText = "🔍 Google वर शोधा";
                     quizCard.appendChild(gLink);
                 }
+                
                 let next = document.createElement('button');
                 next.className = 'next-btn';
                 next.innerText = "Next Question ➡️";
-                next.onclick = () => { currentQ++; if(currentQ < currentItems.length) render(); else quizCard.innerHTML = "<div style='text-align:center;'>सत्र पूर्ण! 🎉</div>"; };
+                next.onclick = () => { currentQ++; if(currentQ < currentItems.length) render(); else quizCard.innerHTML = "सत्र पूर्ण! 🎉"; };
                 quizCard.appendChild(next);
             };
             quizCard.appendChild(btn);
         });
     }
+
     init();
 </script>
 </body>
