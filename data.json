@@ -1,0 +1,14 @@
+[
+  {
+    "q": "1857 ki kranti kab shuru hui?",
+    "o": ["1857", "1858", "1859", "1860"],
+    "a": "1857",
+    "link": "https://www.google.com/search?q=1857+revolt+date"
+  },
+  {
+    "q": "Gandhi ji ka janm kahan hua tha?",
+    "o": ["Delhi", "Porbandar", "Mumbai", "Pune"],
+    "a": "Porbandar",
+    "link": "https://www.google.com/search?q=gandhi+birthplace"
+  }
+]
