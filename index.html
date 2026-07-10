@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        #quiz-box { background: white; padding: 30px; width: 450px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        
+        #timer { font-size: 1.2rem; color: #e74c3c; font-weight: bold; margin: 10px 0; }
+        
+        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #3498db; border-radius: 8px; background: white; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        
+        .btn:hover { background: #3498db; color: white; transform: scale(1.02); }
+        
+        /* Feedback colors */
+        .correct { background: #2ecc71 !important; color: white; border-color: #2ecc71; }
+        .wrong { background: #e74c3c !important; color: white; border-color: #e74c3c; }
+
+        #ref-area { margin-top: 20px; font-weight: bold; }
+        a { color: #3498db; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-box">
+    <div id="date" style="font-size: 0.8rem; color: #7f8c8d;"></div>
+    <h3 id="question">Loading...</h3>
+    <div id="timer">Time: 15s</div>
+    <div id="options"></div>
+    <div id="ref-area"></div>
+</div>
+
+<script>
+    let quizData = [], currentQ = 0, timer, timeLeft = 15;
+
+    fetch('data.json')
+        .then(res => res.json())
+        .then(data => { quizData = data; loadQuestion(); });
+
+    function loadQuestion() {
+        if (currentQ >= quizData.length) {
+            document.getElementById('quiz-box').innerHTML = "<h2>Quiz Khatam! 🎉</h2><p>Badhiya koshish!</p>";
+            return;
+        }
+
+        document.getElementById('date').innerText = "Date: " + new Date().toLocaleDateString();
+        const qData = quizData[currentQ];
+        document.getElementById('question').innerText = qData.q;
+        document.getElementById('ref-area').innerHTML = '';
+        
+        const optDiv = document.getElementById('options');
+        optDiv.innerHTML = '';
+        
+        qData.o.forEach(opt => {
+            let btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(btn, opt === qData.a, qData.link);
+            optDiv.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function handleAnswer(btn, isCorrect, link) {
+        clearInterval(timer);
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(b => b.disabled = true); // Dubara click na ho sake
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            document.getElementById('ref-area').innerText = "Sahi Jawab! ✅";
+        } else {
+            btn.classList.add('wrong');
+            document.getElementById('ref-area').innerHTML = `<a href="${link}" target="_blank">Galat! Yahan se padhein 📖</a>`;
+        }
+        
+        setTimeout(loadQuestion, 2000);
+        currentQ++;
+    }
+
+    function startTimer() {
+        timeLeft = 15;
+        document.getElementById('timer').innerText = "Time: " + timeLeft + "s";
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = "Time: " + timeLeft + "s";
+            if (timeLeft <= 0) { 
+                clearInterval(timer); 
+                document.getElementById('ref-area').innerHTML = "Time Khatam! ⏳";
+                setTimeout(loadQuestion, 1500);
+                currentQ++;
+            }
+        }, 1000);
+    }
+</script>
+</body>
+</html>
