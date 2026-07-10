@@ -2,96 +2,99 @@
 <html lang="hi">
 <head>
     <style>
-        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { background: #f8fbff; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        #quiz-box { background: white; padding: 20px; width: 350px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        #quiz-box { background: white; padding: 30px; width: 450px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .points-box { background: #e3f2fd; color: #0277bd; padding: 10px; text-align: center; font-weight: bold; border-radius: 10px; margin-bottom: 20px; }
+        #timer { color: #d32f2f; font-weight: bold; text-align: center; margin-bottom: 10px; }
         
-        #timer { font-size: 1.2rem; color: #e74c3c; font-weight: bold; margin: 10px 0; }
+        .question-card { border-left: 5px solid #007bff; padding-left: 15px; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; text-align: left; transition: 0.2s; }
+        .btn:hover { border-color: #007bff; }
         
-        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #3498db; border-radius: 8px; background: white; cursor: pointer; transition: 0.3s; font-size: 1rem; }
-        
-        .btn:hover { background: #3498db; color: white; transform: scale(1.02); }
-        
-        /* Feedback colors */
         .correct { background: #2ecc71 !important; color: white; border-color: #2ecc71; }
         .wrong { background: #e74c3c !important; color: white; border-color: #e74c3c; }
-
-        #ref-area { margin-top: 20px; font-weight: bold; }
-        a { color: #3498db; text-decoration: none; }
     </style>
 </head>
 <body>
 
 <div id="quiz-box">
-    <div id="date" style="font-size: 0.8rem; color: #7f8c8d;"></div>
-    <h3 id="question">Loading...</h3>
+    <div class="points-box" id="points">Points: 0</div>
     <div id="timer">Time: 15s</div>
-    <div id="options"></div>
-    <div id="ref-area"></div>
+    <div id="question-card" class="question-card">
+        <h3 id="question">Loading...</h3>
+        <div id="options"></div>
+        <div id="feedback" style="margin-top:10px; font-weight:bold;"></div>
+    </div>
 </div>
 
 <script>
-    let quizData = [], currentQ = 0, timer, timeLeft = 15;
+    let quizData = [], currentQ = 0, points = 0, timeLeft = 15, timerInterval;
 
     fetch('data.json')
         .then(res => res.json())
         .then(data => { quizData = data; loadQuestion(); });
 
+    function startTimer() {
+        timeLeft = 15;
+        document.getElementById('timer').innerText = "Time: " + timeLeft + "s";
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = "Time: " + timeLeft + "s";
+            if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeout(); }
+        }, 1000);
+    }
+
     function loadQuestion() {
+        clearInterval(timerInterval);
         if (currentQ >= quizData.length) {
-            document.getElementById('quiz-box').innerHTML = "<h2>Quiz Khatam! 🎉</h2><p>Badhiya koshish!</p>";
+            document.getElementById('quiz-box').innerHTML = "<h2>Quiz Finished! 🎉</h2><p>Total Points: " + points + "</p>";
             return;
         }
-
-        document.getElementById('date').innerText = "Date: " + new Date().toLocaleDateString();
-        const qData = quizData[currentQ];
-        document.getElementById('question').innerText = qData.q;
-        document.getElementById('ref-area').innerHTML = '';
         
-        const optDiv = document.getElementById('options');
-        optDiv.innerHTML = '';
+        const qData = quizData[currentQ];
+        document.getElementById('question').innerText = (currentQ + 1) + ". " + qData.q;
+        document.getElementById('options').innerHTML = '';
+        document.getElementById('feedback').innerHTML = '';
         
         qData.o.forEach(opt => {
             let btn = document.createElement('button');
             btn.className = 'btn';
             btn.innerText = opt;
-            btn.onclick = () => handleAnswer(btn, opt === qData.a, qData.link);
-            optDiv.appendChild(btn);
+            btn.onclick = () => checkAnswer(btn, opt === qData.a, qData.link);
+            document.getElementById('options').appendChild(btn);
         });
         startTimer();
     }
 
-    function handleAnswer(btn, isCorrect, link) {
-        clearInterval(timer);
-        const buttons = document.querySelectorAll('.btn');
-        buttons.forEach(b => b.disabled = true); // Dubara click na ho sake
-
+    function checkAnswer(btn, isCorrect, link) {
+        clearInterval(timerInterval);
+        document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+        
         if (isCorrect) {
             btn.classList.add('correct');
-            document.getElementById('ref-area').innerText = "Sahi Jawab! ✅";
+            document.getElementById('feedback').innerText = "✅ Sahi Jawab!";
+            points++;
+            document.getElementById('points').innerText = "Points: " + points;
         } else {
             btn.classList.add('wrong');
-            document.getElementById('ref-area').innerHTML = `<a href="${link}" target="_blank">Galat! Yahan se padhein 📖</a>`;
+            document.getElementById('feedback').innerHTML = `<a href="${link}" target="_blank">Galat! Yahan padhein 📖</a>`;
         }
-        
-        setTimeout(loadQuestion, 2000);
-        currentQ++;
+        setTimeout(nextQuestion, 2000);
     }
 
-    function startTimer() {
-        timeLeft = 15;
-        document.getElementById('timer').innerText = "Time: " + timeLeft + "s";
-        timer = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').innerText = "Time: " + timeLeft + "s";
-            if (timeLeft <= 0) { 
-                clearInterval(timer); 
-                document.getElementById('ref-area').innerHTML = "Time Khatam! ⏳";
-                setTimeout(loadQuestion, 1500);
-                currentQ++;
-            }
-        }, 1000);
+    function handleTimeout() {
+        document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+        document.getElementById('feedback').innerText = "⏳ Time Khatam!";
+        setTimeout(nextQuestion, 2000);
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        loadQuestion();
     }
 </script>
 </body>
 </html>
+
+        
