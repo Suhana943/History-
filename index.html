@@ -3,168 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>आधुनिक महाराष्ट्र इतिहास क्विझ</title>
+    <title>Modern Quiz App</title>
     <style>
-        /* Modern Design System */
-        :root {
-            --primary: #6366f1;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --success: #22c55e;
-            --error: #ef4444;
-        }
+        :root { --primary: #6366f1; --bg: #f8fafc; --card-bg: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
 
-        body { 
-            background: var(--bg); 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            color: var(--text);
-            margin: 0; 
-            padding: 20px; 
-        }
+        /* Navbar */
+        .navbar { background: white; padding: 15px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .nav-btn { background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-weight: 600; transition: 0.3s; }
+        .nav-btn.active { background: var(--primary); color: white; }
 
-        .quiz-section { 
-            width: 100%; 
-            max-width: 500px; 
-            margin: 0 auto 40px auto; 
-        }
+        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; }
+        .points-box { background: #dbeafe; color: #1e40af; text-align: center; padding: 12px; border-radius: 15px; font-weight: bold; margin-bottom: 20px; }
 
-        .section-title {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-        }
-
-        .quiz-card { 
-            background: var(--card-bg); 
-            padding: 25px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-        }
-
-        .question-text {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
-
-        .btn { 
-            display: block; 
-            width: 100%; 
-            padding: 14px; 
-            margin: 10px 0; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 12px; 
-            background: white; 
-            cursor: pointer; 
-            text-align: left;
-            transition: all 0.2s ease;
-            font-size: 1rem;
-        }
-
+        /* Card Style */
+        .quiz-card { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+        .question-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 25px; }
+        .btn { display: block; width: 100%; padding: 16px; margin: 12px 0; border: 2px solid #f1f5f9; border-radius: 16px; background: #f8fafc; cursor: pointer; text-align: left; transition: 0.3s; }
         .btn:hover:not(:disabled) { border-color: var(--primary); background: #eef2ff; }
-        
-        .correct { background: var(--success) !important; color: white; border-color: var(--success); }
-        .wrong { background: var(--error) !important; color: white; border-color: var(--error); }
-
-        .next-btn { 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 14px; 
-            width: 100%; 
-            border-radius: 12px; 
-            margin-top: 20px; 
-            font-weight: 600;
-            cursor: pointer; 
-        }
-
-        .google-btn { 
-            background: #f1f5f9; 
-            color: var(--primary); 
-            border: 1px solid var(--primary); 
-            padding: 12px; 
-            width: 100%; 
-            border-radius: 12px; 
-            margin-top: 10px; 
-            text-decoration: none; 
-            display: block; 
-            text-align: center; 
-            font-weight: 500;
-        }
+        .correct { background: #22c55e !important; color: white; border: none; }
+        .wrong { background: #ef4444 !important; color: white; border: none; }
     </style>
 </head>
 <body>
 
-<div id="main-container"></div>
+<div class="navbar" id="navbar"></div>
+<div class="container">
+    <div class="points-box" id="points">Points: 0</div>
+    <div id="quiz-card" class="quiz-card"></div>
+</div>
 
 <script>
     const files = ["data.json", "quiz.json", "quiz2.json"];
+    let score = 0;
 
-    async function loadAllQuizzes() {
-        const container = document.getElementById('main-container');
-
-        for (let file of files) {
-            try {
-                let res = await fetch(file);
-                let rawData = await res.json();
-                let items = rawData.quiz ? rawData.quiz : rawData;
-
-                let section = document.createElement('div');
-                section.className = 'quiz-section';
-                section.innerHTML = `<div class="section-title">📂 ${file}</div>`;
-                
-                let card = document.createElement('div');
-                card.className = 'quiz-card';
-                
-                let qIndex = 0;
-                function render() {
-                    let qData = items[qIndex];
-                    let q = qData.q || qData.question;
-                    let o = qData.o || qData.options;
-                    let a = qData.a || qData.answer;
-                    
-                    card.innerHTML = `<div class="question-text">${qIndex + 1}. ${q}</div>`;
-                    
-                    o.forEach(opt => {
-                        let btn = document.createElement('button');
-                        btn.className = 'btn';
-                        btn.innerText = opt;
-                        btn.onclick = () => {
-                            card.querySelectorAll('.btn').forEach(b => b.disabled = true);
-                            if(opt === a) {
-                                btn.classList.add('correct');
-                            } else {
-                                btn.classList.add('wrong');
-                                let gLink = document.createElement('a');
-                                gLink.className = 'google-btn';
-                                gLink.href = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
-                                gLink.target = "_blank";
-                                gLink.innerText = "🔍 अधिक माहितीसाठी Google शोधा";
-                                card.appendChild(gLink);
-                            }
-                            
-                            let next = document.createElement('button');
-                            next.className = 'next-btn';
-                            next.innerText = (qIndex + 1 === items.length) ? "सत्र पूर्ण झाले! 🎉" : "पुढील प्रश्न ➡️";
-                            next.onclick = () => { qIndex++; if(qIndex < items.length) render(); else card.innerHTML = "<p style='text-align:center;'>सत्र समाप्त! तुम्ही सर्व प्रश्न पूर्ण केले आहेत. 🎉</p>"; };
-                            card.appendChild(next);
-                        };
-                        card.appendChild(btn);
-                    });
-                }
-                render();
-                section.appendChild(card);
-                container.appendChild(section);
-            } catch(e) { console.error("Error loading " + file, e); }
+    async function init() {
+        const navbar = document.getElementById('navbar');
+        
+        for (let i = 0; i < files.length; i++) {
+            let btn = document.createElement('button');
+            btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
+            btn.innerText = files[i];
+            btn.onclick = () => loadQuiz(files[i], btn);
+            navbar.appendChild(btn);
         }
+        loadQuiz(files[0], document.querySelector('.nav-btn'));
     }
-    loadAllQuizzes();
+
+    async function loadQuiz(fileName, btn) {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        let res = await fetch(fileName);
+        let data = await res.json();
+        let items = data.quiz ? data.quiz : data;
+        render(items[0]); // पहिल्या प्रश्नासाठी
+    }
+
+    function render(qData) {
+        const quizCard = document.getElementById('quiz-card');
+        quizCard.innerHTML = `<div class="question-text">${qData.q || qData.question}</div>`;
+        
+        let options = qData.o || qData.options;
+        options.forEach(opt => {
+            let btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = opt;
+            btn.onclick = () => {
+                quizCard.querySelectorAll('.btn').forEach(b => b.disabled = true);
+                if(opt === (qData.a || qData.answer)) {
+                    btn.classList.add('correct');
+                    score += 10;
+                    document.getElementById('points').innerText = "Points: " + score;
+                } else {
+                    btn.classList.add('wrong');
+                }
+            };
+            quizCard.appendChild(btn);
+        });
+    }
+
+    init();
 </script>
 </body>
 </html>
