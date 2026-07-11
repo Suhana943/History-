@@ -7,7 +7,7 @@
     <style>
         :root { --primary: #6366f1; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; }
         .dark-mode { --primary: #818cf8; --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; transition: 0.3s; }
         
         .navbar { background: var(--card-bg); padding: 15px; display: flex; gap: 10px; overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2e8f0; }
         .nav-btn { background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
@@ -18,19 +18,23 @@
         #progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
         
         .quiz-card { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; transition: 0.2s; }
-        .btn:hover { border-color: var(--primary); }
+        .btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; }
         
-        /* FAB Styles */
+        .controls { display: flex; gap: 10px; margin-top: 20px; }
+        .nav-control { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; background: #e2e8f0; }
+        .google-btn { display: block; width: 100%; padding: 12px; margin-top: 10px; text-align: center; text-decoration: none; border: 2px solid var(--primary); color: var(--primary); border-radius: 12px; font-weight: bold; }
+        
         #fab-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--primary); color: white; border: none; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4); z-index: 1000; }
         #jump-box { position: fixed; bottom: 90px; right: 20px; background: var(--card-bg); padding: 15px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 1000; }
+        .star-btn { background: none; border: none; font-size: 24px; cursor: pointer; margin-left: auto; }
     </style>
 </head>
 <body>
 
 <div class="navbar" id="navbar">
     <button class="nav-btn" onclick="resetQuiz()">🗑️ Reset</button>
-    <button class="nav-btn" onclick="toggleDarkMode()">🌙 Dark</button>
+    <button class="nav-btn" onclick="toggleDarkMode()">🌙 Mode</button>
+    <button class="nav-btn" onclick="showBookmarks()">⭐ Fav</button>
 </div>
 
 <div class="container">
@@ -44,7 +48,7 @@
 </div>
 
 <script>
-    let score = 0, currentQ = 0, currentItems = [], correctCount = 0;
+    let score = 0, currentQ = 0, currentItems = [], startTime;
     const files = ["data.json", "quiz.json", "quiz2.json"];
 
     async function init() {
@@ -55,7 +59,7 @@
             btn.onclick = () => loadQuiz(file, btn);
             navbar.appendChild(btn);
         });
-        loadQuiz(files[0], document.querySelector('.nav-btn:nth-child(3)'));
+        loadQuiz(files[0], document.querySelector('.nav-btn'));
     }
 
     async function loadQuiz(file, btn) {
@@ -64,32 +68,67 @@
         let res = await fetch(file);
         let data = await res.json();
         currentItems = data.quiz || data;
-        
         currentQ = parseInt(localStorage.getItem(file + '_q')) || 0;
-        score = parseInt(localStorage.getItem(file + '_score')) || 0;
+        startTime = Date.now(); // Timer start
         render();
     }
 
     function render() {
         if(currentQ >= currentItems.length) return showSummary();
-        
         let qData = currentItems[currentQ];
+        let qText = qData.q || qData.question;
         document.getElementById('progress-fill').style.width = ((currentQ + 1) / currentItems.length) * 100 + "%";
         
         const quizCard = document.getElementById('quiz-card');
-        quizCard.innerHTML = `<h3>Q${currentQ + 1}: ${qData.q || qData.question}</h3>`;
-        
+        quizCard.innerHTML = `
+            <div style="display:flex; align-items:center;">
+                <h3>Q${currentQ + 1}: ${qText}</h3>
+                <button class="star-btn" onclick="toggleBookmark('${qText.replace(/'/g, "\\'")}')">⭐</button>
+            </div>
+        `;
         (qData.o || qData.options).forEach(opt => {
             let btn = document.createElement('button');
             btn.className = 'btn'; btn.innerText = opt;
-            btn.onclick = () => {
-                if(opt === (qData.a || qData.answer)) { score += 10; correctCount++; }
-                currentQ++;
-                saveProgress();
-                render();
-            };
+            btn.onclick = () => { if(opt === (qData.a || qData.answer)) score += 10; saveProgress(); };
             quizCard.appendChild(btn);
         });
+
+        quizCard.innerHTML += `
+            <a class="google-btn" href="https://www.google.com/search?q=${encodeURIComponent(qText)}" target="_blank">🔍 Google वर शोधा</a>
+            <div class="controls">
+                <button class="nav-control" onclick="changeQ(-1)">⬅️ Prev</button>
+                <button class="nav-control" onclick="changeQ(1)">Next ➡️</button>
+            </div>
+        `;
+    }
+
+    function showSummary() {
+        let timeTaken = Math.floor((Date.now() - startTime) / 1000);
+        let m = Math.floor(timeTaken / 60);
+        let s = timeTaken % 60;
+        document.getElementById('quiz-card').innerHTML = `
+            <h2>सत्र पूर्ण! 🎉</h2>
+            <p>Score: ${score}</p>
+            <p>⏱️ Time: ${m} min ${s} sec</p>
+            <button class="btn" onclick="resetQuiz()">Re-start</button>
+        `;
+    }
+
+    function toggleBookmark(qText) {
+        let b = JSON.parse(localStorage.getItem('bookmarks')) || [];
+        b.includes(qText) ? b = b.filter(i => i !== qText) : b.push(qText);
+        localStorage.setItem('bookmarks', JSON.stringify(b));
+        alert("Saved to Favorites!");
+    }
+
+    function showBookmarks() {
+        let b = JSON.parse(localStorage.getItem('bookmarks')) || [];
+        alert("Favorites:\n" + (b.length ? b.join("\n") : "No favorites yet!"));
+    }
+
+    function changeQ(dir) {
+        currentQ = Math.max(0, Math.min(currentItems.length - 1, currentQ + dir));
+        saveProgress(); render();
     }
 
     function saveProgress() {
@@ -98,25 +137,10 @@
         localStorage.setItem(activeFile + '_score', score);
     }
 
-    function showSummary() {
-        document.getElementById('quiz-card').innerHTML = `<h2>सत्र पूर्ण! 🎉</h2><p>Score: ${score}</p><button class="btn" onclick="resetQuiz()">Re-start</button>`;
-    }
-
     function resetQuiz() { localStorage.clear(); location.reload(); }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function toggleInput() { document.getElementById('jump-box').style.display = document.getElementById('jump-box').style.display === 'block' ? 'none' : 'block'; }
-
-    function handleEnter(event) {
-        if (event.key === "Enter") {
-            let qNum = parseInt(document.getElementById('q-number').value);
-            if(qNum > 0 && qNum <= currentItems.length) { currentQ = qNum - 1; render(); toggleInput(); }
-        }
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if(e.key === "ArrowRight") { currentQ++; render(); }
-        if(e.key === "ArrowLeft" && currentQ > 0) { currentQ--; render(); }
-    });
+    function handleEnter(event) { if (event.key === "Enter") { let qNum = parseInt(document.getElementById('q-number').value); if(qNum > 0 && qNum <= currentItems.length) { currentQ = qNum - 1; render(); toggleInput(); } } }
 
     init();
 </script>
