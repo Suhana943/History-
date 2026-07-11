@@ -14,8 +14,6 @@
         .nav-btn.active { background: var(--primary); color: white; }
         
         .container { max-width: 550px; margin: 30px auto; padding: 0 20px; }
-        
-        /* Top Status Section holding Progress and live Timer */
         .status-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; font-weight: bold; }
         #progress-bar { height: 10px; background: #e2e8f0; border-radius: 5px; flex-grow: 1; margin-right: 15px; overflow: hidden; }
         #progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
@@ -60,11 +58,11 @@
     let score = 0, currentQ = 0, currentItems = [], currentFile = "";
     let startTime = null, timerInterval = null;
 
-    const files = ["data.json", "quiz.json", "quiz2.json"];
+    const files = ["quiz.json", "quiz2.json"]; // येथे तुमच्या फाईल्सची नावे द्या
 
     async function init() {
         const navbar = document.getElementById('navbar');
-        files.forEach((file, index) => {
+        files.forEach((file) => {
             let btn = document.createElement('button');
             btn.className = 'nav-btn'; 
             btn.innerText = file;
@@ -84,29 +82,20 @@
             let data = await res.json();
             currentItems = data.quiz || data;
             currentQ = parseInt(localStorage.getItem(currentFile + '_q')) || 0;
-            
             initTimer();
             render();
         } catch(e) {
-            document.getElementById('quiz-card').innerHTML = `<h3>❌ Error loading ${file}</h3>`;
+            document.getElementById('quiz-card').innerHTML = `<h3>❌ ${file} लोड करताना एरर आला</h3>`;
         }
     }
 
     function initTimer() {
         clearInterval(timerInterval);
-        
-        // Grab existing time or start fresh
         let savedTime = localStorage.getItem(currentFile + '_time');
-        if (savedTime) {
-            startTime = Date.now() - parseInt(savedTime);
-        } else {
-            startTime = Date.now();
-        }
-
+        startTime = savedTime ? Date.now() - parseInt(savedTime) : Date.now();
         timerInterval = setInterval(() => {
             let elapsed = Date.now() - startTime;
-            localStorage.setItem(currentFile + '_time', elapsed); // save runtime state
-            
+            localStorage.setItem(currentFile + '_time', elapsed);
             let totalSecs = Math.floor(elapsed / 1000);
             let mins = Math.floor(totalSecs / 60).toString().padStart(2, '0');
             let secs = (totalSecs % 60).toString().padStart(2, '0');
@@ -116,7 +105,6 @@
 
     function render() {
         if(currentQ >= currentItems.length) return showSummary();
-        
         let qData = currentItems[currentQ];
         let qText = qData.q || qData.question;
         let correctAnswer = qData.a || qData.answer;
@@ -126,56 +114,36 @@
         const quizCard = document.getElementById('quiz-card');
         quizCard.innerHTML = `
             <div style="display:flex; align-items:center;">
-                <h3>Q${currentQ + 1}: ${qText}</h3>
+                <h3>प्रश्न ${currentQ + 1} / ${currentItems.length}</h3>
                 <button class="star-btn" onclick="toggleBookmark('${qText.replace(/'/g, "\\'")}')">⭐</button>
             </div>
+            <p>${qText}</p>
             <div id="options-container"></div>
-            <a class="google-btn" href="https://google.com{encodeURIComponent(qText)}" target="_blank">🔍 Google वर शोधा</a>
+            <a class="google-btn" href="https://www.google.com/search?q=${encodeURIComponent(qText)}" target="_blank">🔍 Google वर शोधा</a>
             <div class="controls">
-                <button class="nav-control" onclick="changeQ(-1)">⬅️ Prev</button>
-                <button class="nav-control" onclick="changeQ(1)">Next ➡️</button>
+                <button class="nav-control" onclick="changeQ(-1)">⬅️ मागील</button>
+                <button class="nav-control" onclick="changeQ(1)">पुढील ➡️</button>
             </div>
         `;
         
         const optionsContainer = document.getElementById('options-container');
-        // Check if user already answered this exact index before
         let savedUserAns = localStorage.getItem(`${currentFile}_ans_${currentQ}`);
-
         (qData.o || qData.options).forEach(opt => {
             let btn = document.createElement('button');
             btn.className = 'btn'; 
             btn.innerText = opt;
-            
-            // Reapply styling if this specific question has past submission data
             if (savedUserAns !== null) {
                 btn.disabled = true;
-                if (opt === correctAnswer) {
-                    btn.style.background = "#22c55e"; 
-                    btn.style.color = "white";
-                } else if (opt === savedUserAns) {
-                    btn.style.background = "#ef4444"; 
-                    btn.style.color = "white";
-                }
+                if (opt === correctAnswer) btn.style.background = "#22c55e", btn.style.color = "white";
+                else if (opt === savedUserAns) btn.style.background = "#ef4444", btn.style.color = "white";
             }
-
             btn.onclick = () => {
                 localStorage.setItem(`${currentFile}_ans_${currentQ}`, opt);
                 document.querySelectorAll('.btn').forEach(b => {
                     b.disabled = true;
-                    if(b.innerText === correctAnswer) {
-                        b.style.background = "#22c55e";
-                        b.style.color = "white";
-                    }
+                    if(b.innerText === correctAnswer) b.style.background = "#22c55e", b.style.color = "white";
                 });
-
-                if(opt === correctAnswer) {
-                    btn.style.background = "#22c55e"; 
-                    btn.style.color = "white";
-                    score += 10;
-                } else {
-                    btn.style.background = "#ef4444"; 
-                    btn.style.color = "white";
-                }
+                if(opt !== correctAnswer) btn.style.background = "#ef4444", btn.style.color = "white";
                 saveProgress();
             };
             optionsContainer.appendChild(btn);
@@ -184,68 +152,23 @@
 
     function showSummary() {
         clearInterval(timerInterval);
-        let elapsed = Date.now() - startTime;
-        let t = Math.floor(elapsed / 1000);
-        document.getElementById('timer-display').innerText = "⏱️ Done";
-        document.getElementById('quiz-card').innerHTML = `
-            <h2>सत्र पूर्ण! 🎉</h2>
-            <p>⏱️ एकूण वेळ: ${Math.floor(t/60)}m ${t%60}s</p>
-            <button class="btn" onclick="resetQuiz()">Restart</button>
-        `;
+        document.getElementById('quiz-card').innerHTML = `<h2>सत्र पूर्ण! 🎉</h2><button class="btn" onclick="resetQuiz()">Restart</button>`;
     }
 
-    function saveProgress() { 
-        localStorage.setItem(currentFile + '_q', currentQ); 
-    }
-
-    function changeQ(dir) { 
-        currentQ = Math.max(0, Math.min(currentItems.length - 1, currentQ + dir)); 
-        saveProgress();
-        render(); 
-    }
-
+    function saveProgress() { localStorage.setItem(currentFile + '_q', currentQ); }
+    function changeQ(dir) { currentQ = Math.max(0, Math.min(currentItems.length - 1, currentQ + dir)); saveProgress(); render(); }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    
-    function resetQuiz() { 
-        clearInterval(timerInterval);
-        localStorage.clear(); 
-        location.reload(); 
-    }
-
-        function toggleInput() { 
-        let box = document.getElementById('jump-box');
-        box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function handleEnter(e) {
-        if (e.key === "Enter") {
-            let qNum = parseInt(document.getElementById('q-number').value);
-            if(qNum > 0 && qNum <= currentItems.length) {
-                currentQ = qNum - 1;
-                render();
-                toggleInput();
-            }
-        }
-    }
-
+    function resetQuiz() { localStorage.clear(); location.reload(); }
+    function toggleInput() { let box = document.getElementById('jump-box'); box.style.display = (box.style.display === 'block') ? 'none' : 'block'; }
+    function handleEnter(e) { if (e.key === "Enter") { currentQ = parseInt(document.getElementById('q-number').value) - 1; render(); toggleInput(); } }
     function toggleBookmark(qText) {
         let b = JSON.parse(localStorage.getItem('bookmarks')) || [];
-        if(b.includes(qText)) {
-            b = b.filter(i => i !== qText);
-            alert("Removed from Favorites!");
-        } else {
-            b.push(qText);
-            alert("Saved to Favorites!");
-        }
+        if(b.includes(qText)) b = b.filter(i => i !== qText), alert("Removed!");
+        else b.push(qText), alert("Saved!");
         localStorage.setItem('bookmarks', JSON.stringify(b));
     }
+    function showBookmarks() { let b = JSON.parse(localStorage.getItem('bookmarks')) || []; alert("Favorites:\n" + (b.length ? b.join("\n") : "Empty")); }
 
-    function showBookmarks() {
-        let b = JSON.parse(localStorage.getItem('bookmarks')) || [];
-        alert("Favorites:\n" + (b.length ? b.join("\n") : "No favorites yet!"));
-    }
-
-    // App Initialize karein
     init();
 </script>
 </body>
