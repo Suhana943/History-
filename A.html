@@ -3,149 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MPSC Quiz App</title>
+    <title>Quiz App</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding-top: 50px; }
-        .quiz-card { background: white; width: 90%; max-width: 400px; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        .question { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; color: #333; }
-        .option-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; background: white; cursor: pointer; transition: 0.3s; }
-        .option-btn:hover { background: #f8f9fa; border-color: #aaa; }
-        .nav-buttons { display: flex; justify-content: space-between; margin-top: 20px; }
-        .nav-btn { padding: 10px 20px; border-radius: 10px; border: none; background: #e0e0e0; cursor: pointer; }
+        body { font-family: sans-serif; background-color: #f4f7f6; margin: 0; }
+        nav { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #ddd; }
+        nav a { margin: 0 15px; text-decoration: none; color: #333; font-weight: bold; }
+        
+        #quiz-container, #about-page { width: 90%; max-width: 400px; margin: 20px auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .star-icon { float: right; color: gold; font-size: 24px; }
+        .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; background: #fff; cursor: pointer; }
+        .correct { background-color: #28a745 !important; color: white; }
+        .wrong { background-color: #dc3545 !important; color: white; }
+        
+        .search-btn { display: block; width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #6c5ce7; border-radius: 10px; background: white; color: #6c5ce7; font-weight: bold; cursor: pointer; }
+        .nav-btns { display: flex; gap: 10px; }
+        .nav-btns button { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #e0e0e0; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="quiz-card">
-    <div id="quiz-content">
-        <div class="question" id="question">प्रश्न लोड होत आहे...</div>
-        <div id="options"></div>
-    </div>
-    <div class="nav-buttons">
-        <button class="nav-btn" onclick="prevQuestion()">⬅ Prev</button>
-        <button class="nav-btn" onclick="nextQuestion()">Next ➡</button>
+<nav>
+    <a href="#" onclick="showQuiz()">Quiz</a>
+    <a href="#" onclick="showAbout()">About Us</a>
+</nav>
+
+<div id="about-page" style="display:none;">
+    <h2>About Us</h2>
+    <p>हे क्विझ ॲप ऐतिहासिक माहितीच्या सरावासाठी बनवले आहे.</p>
+</div>
+
+<div id="quiz-container">
+    <span class="star-icon">★</span>
+    <h3 id="question">प्रश्न लोड होत आहे...</h3>
+    <div id="options"></div>
+    <button class="search-btn" onclick="googleSearch()">🔍 Google वर शोधा</button>
+    <div class="nav-btns">
+        <button onclick="prevQuestion()">⬅️ Prev</button>
+        <button onclick="nextQuestion()">Next ➡️</button>
     </div>
 </div>
 
 <script>
-    const questions = [
-  {"question": "Who was the editor of 'Darpan'?", "options": ["Balshastri Jambhekar", "Bhau Maharaj", "Agarkar", "Lokmanya Tilak"], "answer": "Balshastri Jambhekar"},
-  {"question": "Who was the editor of 'Digdarshan' (monthly)?", "options": ["Balshastri Jambhekar", "V. K. Rajwade", "Sane Guruji", "Gopal Hari Deshmukh"], "answer": "Balshastri Jambhekar"},
-  {"question": "Who was the editor of 'Prabhakar' (weekly)?", "options": ["Bhau Maharaj", "Balshastri Jambhekar", "Lokhitwadi", "Tilak"], "answer": "Bhau Maharaj"},
-  {"question": "Who was the editor of 'Hitechhu' (weekly)?", "options": ["Gopal Hari Deshmukh", "Agarkar", "Sane Guruji", "Tilak"], "answer": "Gopal Hari Deshmukh"},
-  {"question": "Who was the editor of 'Kaal' (weekly)?", "options": ["Shi. Ma. Paranjape", "Sane Guruji", "Agarkar", "Tilak"], "answer": "Shi. Ma. Paranjape"},
-  {"question": "Who was the editor of 'Swarajya Patra' (weekly)?", "options": ["Shi. Ma. Paranjape", "Tilak", "Agarkar", "Bhau Maharaj"], "answer": "Shi. Ma. Paranjape"},
-  {"question": "Who was the editor of 'Labour Kisan Gazette'?", "options": ["M. Singaravelu", "Shripad Dange", "Sane Guruji", "Vinoba Bhave"], "answer": "M. Singaravelu"},
-  {"question": "Who was the editor of 'The Socialist'?", "options": ["Shripad Dange", "M. Singaravelu", "Sane Guruji", "Vinoba Bhave"], "answer": "Shripad Dange"},
-  {"question": "Who was the editor of 'Kranti'?", "options": ["Shripad Dange", "Sane Guruji", "Bhau Maharaj", "Tilak"], "answer": "Shripad Dange"},
-  {"question": "Who was the editor of 'Kesari'?", "options": ["Lokmanya Tilak", "Agarkar", "Bhau Maharaj", "Sane Guruji"], "answer": "Lokmanya Tilak"},
-  {"question": "Who was the editor of 'Maratha' (English weekly)?", "options": ["Lokmanya Tilak", "Agarkar", "Sane Guruji", "Ambedkar"], "answer": "Lokmanya Tilak"},
-  {"question": "Who was the editor of 'Dinbandhu' (weekly)?", "options": ["Krishnarao Bhalekar", "Tilak", "Agarkar", "Ambedkar"], "answer": "Krishnarao Bhalekar"},
-  {"question": "Who was the editor of 'Samaj Swasthya' (monthly)?", "options": ["Raghunath Dhondo Karve", "Sane Guruji", "Ambedkar", "Vinoba Bhave"], "answer": "Raghunath Dhondo Karve"},
-  {"question": "Who was the editor of 'Vidyarthi' (monthly)?", "options": ["Sane Guruji", "Agarkar", "Ambedkar", "Vinoba Bhave"], "answer": "Sane Guruji"},
-  {"question": "Who was the editor of 'Congress' (weekly)?", "options": ["Sane Guruji", "Agarkar", "Ambedkar", "Tilak"], "answer": "Sane Guruji"},
-  {"question": "Who was the editor of 'Sadhana' (weekly)?", "options": ["Sane Guruji", "Agarkar", "Ambedkar", "Vinoba Bhave"], "answer": "Sane Guruji"},
-  {"question": "Who was the editor of 'Shalapatrak'?", "options": ["Krishnashastri Chiplunkar", "Sane Guruji", "Agarkar", "Tilak"], "answer": "Krishnashastri Chiplunkar"},
-  {"question": "Who was the editor of 'Vicharlahari'?", "options": ["Krishnashastri Chiplunkar", "Agarkar", "Sane Guruji", "Tilak"], "answer": "Krishnashastri Chiplunkar"},
-  {"question": "Who was the editor of 'Hindu Panch'?", "options": ["Krishnashastri Chiplunkar", "Agarkar", "Sane Guruji", "Tilak"], "answer": "Krishnashastri Chiplunkar"},
-  {"question": "Who was the editor of 'Upasana' (weekly)?", "options": ["V. R. Shinde", "Sane Guruji", "Agarkar", "Tilak"], "answer": "V. R. Shinde"},
-  {"question": "Who published 'Subodh Patrika'?", "options": ["Prarthana Samaj", "Sane Guruji", "Agarkar", "Tilak"], "answer": "Prarthana Samaj"},
-  {"question": "Who was the editor of 'Maharashtra Dharma' (monthly)?", "options": ["Acharya Vinoba Bhave", "Maharshi Karve", "Sane Guruji", "V. R. Shinde"], "answer": "Acharya Vinoba Bhave"},
-  {"question": "Who was the editor of 'Manavi Samata'?", "options": ["Maharshi Dhondo Keshav Karve", "Sane Guruji", "Ambedkar", "V. R. Shinde"], "answer": "Maharshi Dhondo Keshav Karve"},
-  {"question": "Who was the editor of 'Sudharak' (weekly)?", "options": ["Agarkar", "Tilak", "Ambedkar", "Sane Guruji"], "answer": "Agarkar"},
-  {"question": "Who was the editor of 'Bahishkrit Bharat' (fortnightly)?", "options": ["Dr. Babasaheb Ambedkar", "Tilak", "Gandhi", "Agarkar"], "answer": "Dr. Babasaheb Ambedkar"},
-  {"question": "Who was the editor of 'Mooknayak' (fortnightly)?", "options": ["Dr. Babasaheb Ambedkar", "Tilak", "Gandhi", "Agarkar"], "answer": "Dr. Babasaheb Ambedkar"},
-  {"question": "Who was the editor of 'Janata' (Prabuddha Bharat)?", "options": ["Dr. Babasaheb Ambedkar", "Sane Guruji", "Gopal Hari Deshmukh", "Agarkar"], "answer": "Dr. Babasaheb Ambedkar"},
-  {"question": "Who was the editor of 'Samata'?", "options": ["Dr. Babasaheb Ambedkar", "Sane Guruji", "Agarkar", "Tilak"], "answer": "Dr. Babasaheb Ambedkar"},
-  {"question": "Who was the editor of 'Manavta'?", "options": ["Dr. Babasaheb Ambedkar", "Sane Guruji", "Agarkar", "Tilak"], "answer": "Dr. Babasaheb Ambedkar"},
-  {"question": "Who was the editor of 'Bahishkrit Mela'?", "options": ["Dr. Babasaheb Ambedkar", "Sane Guruji", "Agarkar", "Tilak"], "answer": "Dr. Babasaheb Ambedkar"},
-  {"question": "Who was the editor of 'Sarvajanik Sabha' (quarterly)?", "options": ["Nyaymurti Mahadev Govind Ranade", "Balshastri Jambhekar", "Agarkar", "Tilak"], "answer": "Nyaymurti Mahadev Govind Ranade"},
-  {"question": "Who was the editor of 'Induprakash'?", "options": ["Mahadev Govind Ranade", "Balshastri Jambhekar", "Agarkar", "Tilak"], "answer": "Mahadev Govind Ranade"},
-  {"question": "Who was the editor of 'Hindustan Gadar' (weekly)?", "options": ["Lala Hardayal", "Swami Shraddhanand", "Savarkar", "Tilak"], "answer": "Lala Hardayal"},
-  {"question": "Who was the editor of 'Shraddha' (weekly)?", "options": ["Swami Shraddhanand", "Tilak", "Gandhi", "Agarkar"], "answer": "Swami Shraddhanand"},
-  {"question": "Who was the editor of 'Vijay' (weekly)?", "options": ["Swami Shraddhanand", "Tilak", "Gandhi", "Agarkar"], "answer": "Swami Shraddhanand"},
-  {"question": "Who was the editor of 'Arjun' (weekly)?", "options": ["Swami Shraddhanand", "Tilak", "Gandhi", "Agarkar"], "answer": "Swami Shraddhanand"},
-  {"question": "Who was the editor of 'Saddharma Prachar' (Urdu weekly)?", "options": ["Swami Shraddhanand", "Tilak", "Gandhi", "Agarkar"], "answer": "Swami Shraddhanand"},
-  {"question": "Who was the editor of 'Vande Mataram'?", "options": ["Aurobindo Ghosh", "Tilak", "Nehru", "Gandhi"], "answer": "Aurobindo Ghosh"},
-  {"question": "Who was the editor of 'Punjabi People'?", "options": ["Lala Lajpat Rai", "Tilak", "Nehru", "Gandhi"], "answer": "Lala Lajpat Rai"},
-  {"question": "Who was the editor of 'National Herald'?", "options": ["Pandit Jawaharlal Nehru", "Subhash Chandra Bose", "Gandhi", "Tilak"], "answer": "Pandit Jawaharlal Nehru"},
-  {"question": "Who was the editor of 'Forward' (monthly)?", "options": ["Subhash Chandra Bose", "Pandit Jawaharlal Nehru", "Gandhi", "Tilak"], "answer": "Subhash Chandra Bose"},
-  {"question": "Who was the editor of 'Indian Sociologist'?", "options": ["Shyamji Krishna Varma", "Tilak", "Gandhi", "Nehru"], "answer": "Shyamji Krishna Varma"},
-  {"question": "Who was the editor of 'Rast Goftar'?", "options": ["Dadabhai Naoroji", "Raja Rammohan Roy", "Firoze Shah Mehta", "Tilak"], "answer": "Dadabhai Naoroji"},
-  {"question": "Who was the editor of 'Voice of India'?", "options": ["Dadabhai Naoroji", "Raja Rammohan Roy", "Firoze Shah Mehta", "Tilak"], "answer": "Dadabhai Naoroji"},
-  {"question": "Who was the editor of 'Bengalee'?", "options": ["Surendra Nath Banerjee", "Tilak", "Gandhi", "Nehru"], "answer": "Surendra Nath Banerjee"},
-  {"question": "Who was the editor of 'Independent India'?", "options": ["Manavendra Nath Roy", "Tilak", "Gandhi", "Nehru"], "answer": "Manavendra Nath Roy"},
-  {"question": "Who was the editor of 'The Vanguard'?", "options": ["Manavendra Nath Roy", "Tilak", "Gandhi", "Nehru"], "answer": "Manavendra Nath Roy"},
-  {"question": "Who was the editor of 'Udbodhak' (Bengali)?", "options": ["Swami Vivekananda", "Tilak", "Gandhi", "Nehru"], "answer": "Swami Vivekananda"},
-  {"question": "Who was the editor of 'Prabuddha Bharata' (English)?", "options": ["Swami Vivekananda", "Tilak", "Gandhi", "Nehru"], "answer": "Swami Vivekananda"},
-  {"question": "Who was the editor of 'Navajivan' (Gujarati weekly)?", "options": ["Mahatma Gandhi", "Nehru", "Sane Guruji", "Tilak"], "answer": "Mahatma Gandhi"},
-  {"question": "Who was the editor of 'Harijan'?", "options": ["Mahatma Gandhi", "Nehru", "Sane Guruji", "Tilak"], "answer": "Mahatma Gandhi"},
-  {"question": "Who was the editor of 'Young India'?", "options": ["Mahatma Gandhi", "Nehru", "Sane Guruji", "Tilak"], "answer": "Mahatma Gandhi"},
-  {"question": "Who was the editor of 'Indian Opinion'?", "options": ["Mahatma Gandhi", "Nehru", "Sane Guruji", "Tilak"], "answer": "Mahatma Gandhi"},
-  {"question": "Who was the editor of 'Mirat-ul-Akhbar'?", "options": ["Raja Rammohan Roy", "Dadabhai Naoroji", "Tilak", "Gandhi"], "answer": "Raja Rammohan Roy"},
-  {"question": "Who was the editor of 'Samachar Chandrika'?", "options": ["Raja Rammohan Roy", "Dadabhai Naoroji", "Tilak", "Gandhi"], "answer": "Raja Rammohan Roy"},
-  {"question": "Who was the editor of 'Bengal Herald'?", "options": ["Raja Rammohan Roy", "Dadabhai Naoroji", "Tilak", "Gandhi"], "answer": "Raja Rammohan Roy"},
-  {"question": "Who was the editor of 'Sambad Kaumudi'?", "options": ["Raja Rammohan Roy", "Dadabhai Naoroji", "Tilak", "Gandhi"], "answer": "Raja Rammohan Roy"},
-  {"question": "Who was the editor of 'Kaivari'?", "options": ["Bhaskar Jadhav", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Bhaskar Jadhav"},
-  {"question": "Who was the editor of 'Bhashantar' (monthly)?", "options": ["V. K. Rajwade", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "V. K. Rajwade"},
-  {"question": "Who was the editor of 'Marathwada'?", "options": ["Sadashiv Vishwanath Pathak", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Sadashiv Vishwanath Pathak"},
-  {"question": "Who was the editor of 'Maharashtra Kesari'?", "options": ["Dr. Punjabrao Deshmukh", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Dr. Punjabrao Deshmukh"},
-  {"question": "Who was the editor of 'Akhand Bharat'?", "options": ["Bhai Mahadevrao Bagal", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Bhai Mahadevrao Bagal"},
-  {"question": "Who was the editor of 'Shatapatre'?", "options": ["Gopal Hari Deshmukh", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Gopal Hari Deshmukh"},
-  {"question": "Who was the editor of 'Times of India'?", "options": ["Robert Knight", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Robert Knight"},
-  {"question": "Who was the editor of 'Hitavada'?", "options": ["Gopal Krishna Gokhale", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Gopal Krishna Gokhale"},
-  {"question": "Who was the editor of 'Yugantar'?", "options": ["Bhupendra Dutt", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Bhupendra Dutt"},
-  {"question": "Who was the editor of 'New India'?", "options": ["Annie Besant", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Annie Besant"},
-  {"question": "Who was the editor of 'Commonweal'?", "options": ["Annie Besant", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Annie Besant"},
-  {"question": "Who was the editor of 'Jnyansindhu'?", "options": ["Tatya Chhatre", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Tatya Chhatre"},
-  {"question": "Who was the editor of 'Bamabodhini'?", "options": ["Umesh Chandra Datta", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Umesh Chandra Datta"},
-  {"question": "Who was the editor of 'Ablabandhav'?", "options": ["Dwarkanath Ganguly", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Dwarkanath Ganguly"},
-  {"question": "Who was the editor of 'Bharati'?", "options": ["Dwijendranath Tagore", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Dwijendranath Tagore"},
-  {"question": "Who was the editor of 'Vasumati'?", "options": ["Hemchandra Ghosh", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Hemchandra Ghosh"},
-  {"question": "Who was the editor of 'Sadesh'?", "options": ["Achyut Balwant Kolhatkar", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Achyut Balwant Kolhatkar"},
-  {"question": "Who was the editor of 'Atmoddhar'?", "options": ["S. N. Chaudhary", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "S. N. Chaudhary"},
-  {"question": "Who was the editor of 'Bharat'?", "options": ["Kakasaheb Karve", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Kakasaheb Karve"},
-  {"question": "Who was the editor of 'Savak'?", "options": ["L. N. Medhe", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "L. N. Medhe"},
-  {"question": "Who was the editor of 'Dalit Bharat'?", "options": ["Dhanaji Birade", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Dhanaji Birade"},
-  {"question": "Who was the editor of 'Leader'?", "options": ["Pt. Madan Mohan Malviya", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Pt. Madan Mohan Malviya"},
-  {"question": "Who was the editor of 'Al-Hilal'?", "options": ["Abdul Kalam Azad", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Abdul Kalam Azad"},
-  {"question": "Who was the editor of 'Prabodhan'?", "options": ["Keshav Thackeray", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Keshav Thackeray"},
-  {"question": "Who was the editor of 'Navayug'?", "options": ["Acharya Atre", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Acharya Atre"},
-  {"question": "Who was the editor of 'Prabhat'?", "options": ["Bhalchandra Kothari", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Bhalchandra Kothari"},
-  {"question": "Who was the editor of 'Satyagraha'?", "options": ["Mahatma Gandhi", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Mahatma Gandhi"},
-  {"question": "Who was the editor of 'Amrita Bazar Patrika'?", "options": ["Motilal Ghosh", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Motilal Ghosh"},
-  {"question": "Who was the editor of 'Sulabh Samachar'?", "options": ["Keshav Chandra Sen", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Keshav Chandra Sen"},
-  {"question": "Who was the editor of 'Native Opinion'?", "options": ["V. N. Mandlik", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "V. N. Mandlik"},
-  {"question": "Who was the editor of 'Bhala'?", "options": ["Bhaskar Balwant Bhopatkar", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Bhaskar Balwant Bhopatkar"},
-  {"question": "Who was the editor of 'Tarun Maratha'?", "options": ["Dinkarrao Jawalkar", "Sane Guruji", "Ambedkar", "Tilak"], "answer": "Dinkarrao Jawalkar"}
+    const quizData = [
+  {"question": "'दर्पण' या वृत्तपत्राचे संपादक कोण होते?", "options": ["बाळशास्त्री जांभेकर", "भाऊ महाराज", "आगरकर", "लोकमान्य टिळक"], "answer": "बाळशास्त्री जांभेकर"},
+  {"question": "'दिग्दर्शन' (मासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["बाळशास्त्री जांभेकर", "वि. का. राजवाडे", "साने गुरुजी", "गोपाळ हरी देशमुख"], "answer": "बाळशास्त्री जांभेकर"},
+  {"question": "'प्रभाकर' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["भाऊ महाराज", "बाळशास्त्री जांभेकर", "लोकहितवादी", "टिळक"], "answer": "भाऊ महाराज"},
+  {"question": "'हितेच्छू' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["गोपाळ हरी देशमुख", "आगरकर", "साने गुरुजी", "टिळक"], "answer": "गोपाळ हरी देशमुख"},
+  {"question": "'काळ' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["शी. म. परांजपे", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "शी. म. परांजपे"},
+  {"question": "'स्वराज्य पत्र' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["शी. म. परांजपे", "टिळक", "आगरकर", "भाऊ महाराज"], "answer": "शी. म. परांजपे"},
+  {"question": "'लेबर किसान गॅझेट' या वृत्तपत्राचे संपादक कोण होते?", "options": ["एम. सिंगारवेलु", "श्रीपाद डांगे", "साने गुरुजी", "विनोबा भावे"], "answer": "एम. सिंगारवेलु"},
+  {"question": "'द सोशलिस्ट' या वृत्तपत्राचे संपादक कोण होते?", "options": ["श्रीपाद डांगे", "एम. सिंगारवेलु", "साने गुरुजी", "विनोबा भावे"], "answer": "श्रीपाद डांगे"},
+  {"question": "'क्रांती' या वृत्तपत्राचे संपादक कोण होते?", "options": ["श्रीपाद डांगे", "साने गुरुजी", "भाऊ महाराज", "टिळक"], "answer": "श्रीपाद डांगे"},
+  {"question": "'केसरी' या वृत्तपत्राचे संपादक कोण होते?", "options": ["लोकमान्य टिळक", "आगरकर", "भाऊ महाराज", "साने गुरुजी"], "answer": "लोकमान्य टिळक"},
+  {"question": "'मराठा' (इंग्रजी साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["लोकमान्य टिळक", "आगरकर", "साने गुरुजी", "आंबेडकर"], "answer": "लोकमान्य टिळक"},
+  {"question": "'दीनबंधू' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["कृष्णाराव भालेकर", "टिळक", "आगरकर", "आंबेडकर"], "answer": "कृष्णाराव भालेकर"},
+  {"question": "'समाज स्वास्थ्य' (मासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["रघुनाथ धोंडो कर्वे", "साने गुरुजी", "आंबेडकर", "विनोबा भावे"], "answer": "रघुनाथ धोंडो कर्वे"},
+  {"question": "'विद्यार्थी' (मासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["साने गुरुजी", "आगरकर", "आंबेडकर", "विनोबा भावे"], "answer": "साने गुरुजी"},
+  {"question": "'कॉंग्रेस' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["साने गुरुजी", "आगरकर", "आंबेडकर", "टिळक"], "answer": "साने गुरुजी"},
+  {"question": "'साधना' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["साने गुरुजी", "आगरकर", "आंबेडकर", "विनोबा भावे"], "answer": "साने गुरुजी"},
+  {"question": "'शाळापत्रक' या वृत्तपत्राचे संपादक कोण होते?", "options": ["कृष्णशास्त्री चिपळूणकर", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "कृष्णशास्त्री चिपळूणकर"},
+  {"question": "'विचारलहरी' या वृत्तपत्राचे संपादक कोण होते?", "options": ["कृष्णशास्त्री चिपळूणकर", "आगरकर", "साने गुरुजी", "टिळक"], "answer": "कृष्णशास्त्री चिपळूणकर"},
+  {"question": "'हिंदू पंच' या वृत्तपत्राचे संपादक कोण होते?", "options": ["कृष्णशास्त्री चिपळूणकर", "आगरकर", "साने गुरुजी", "टिळक"], "answer": "कृष्णशास्त्री चिपळूणकर"},
+  {"question": "'उपासना' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["वी. रा. शिंदे", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "वी. रा. शिंदे"},
+  {"question": "'सुबोध पत्रिका' कोणाद्वारे प्रकाशित केली जात असे?", "options": ["प्रार्थना समाज", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "प्रार्थना समाज"},
+  {"question": "'महाराष्ट्र धर्म' (मासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["आचार्य विनोबा भावे", "महर्षी कर्वे", "साने गुरुजी", "वी. रा. शिंदे"], "answer": "आचार्य विनोबा भावे"},
+  {"question": "'मानवी समता' या वृत्तपत्राचे संपादक कोण होते?", "options": ["महर्षी धोंडो केशव कर्वे", "साने गुरुजी", "आंबेडकर", "वी. रा. शिंदे"], "answer": "महर्षी धोंडो केशव कर्वे"},
+  {"question": "'सुधारक' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["आगरकर", "टिळक", "आंबेडकर", "साने गुरुजी"], "answer": "आगरकर"},
+  {"question": "'बहिष्कृत भारत' (पाक्षिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. बाबासाहेब आंबेडकर", "टिळक", "गांधी", "आगरकर"], "answer": "डॉ. बाबासाहेब आंबेडकर"},
+  {"question": "'मूकनायक' (पाक्षिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. बाबासाहेब आंबेडकर", "टिळक", "गांधी", "आगरकर"], "answer": "डॉ. बाबासाहेब आंबेडकर"},
+  {"question": "'जनता' (प्रबुद्ध भारत) या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. बाबासाहेब आंबेडकर", "साने गुरुजी", "गोपाळ हरी देशमुख", "आगरकर"], "answer": "डॉ. बाबासाहेब आंबेडकर"},
+  {"question": "'समता' या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. बाबासाहेब आंबेडकर", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "डॉ. बाबासाहेब आंबेडकर"},
+  {"question": "'मानवता' या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. बाबासाहेब आंबेडकर", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "डॉ. बाबासाहेब आंबेडकर"},
+  {"question": "'बहिष्कृत मेळा' या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. बाबासाहेब आंबेडकर", "साने गुरुजी", "आगरकर", "टिळक"], "answer": "डॉ. बाबासाहेब आंबेडकर"},
+  {"question": "'सार्वजनिक सभा' (त्रैमासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["न्या. महादेव गोविंद रानडे", "बाळशास्त्री जांभेकर", "आगरकर", "टिळक"], "answer": "न्या. महादेव गोविंद रानडे"},
+  {"question": "'इंदुप्रकाश' या वृत्तपत्राचे संपादक कोण होते?", "options": ["महादेव गोविंद रानडे", "बाळशास्त्री जांभेकर", "आगरकर", "टिळक"], "answer": "महादेव गोविंद रानडे"},
+  {"question": "'हिंदुस्थान गदर' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["लाला हरदयाळ", "स्वामी श्रद्धानंद", "सावरकर", "टिळक"], "answer": "लाला हरदयाळ"},
+  {"question": "'श्रद्धा' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["स्वामी श्रद्धानंद", "टिळक", "गांधी", "आगरकर"], "answer": "स्वामी श्रद्धानंद"},
+  {"question": "'विजय' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["स्वामी श्रद्धानंद", "टिळक", "गांधी", "आगरकर"], "answer": "स्वामी श्रद्धानंद"},
+  {"question": "'अर्जुन' (साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["स्वामी श्रद्धानंद", "टिळक", "गांधी", "आगरकर"], "answer": "स्वामी श्रद्धानंद"},
+  {"question": "'सद्धर्म प्रचार' (उर्दू साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["स्वामी श्रद्धानंद", "टिळक", "गांधी", "आगरकर"], "answer": "स्वामी श्रद्धानंद"},
+  {"question": "'वंदे मातरम' या वृत्तपत्राचे संपादक कोण होते?", "options": ["अरविंद घोष", "टिळक", "नेहरू", "गांधी"], "answer": "अरविंद घोष"},
+  {"question": "'पंजाबी पिपल्स' या वृत्तपत्राचे संपादक कोण होते?", "options": ["लाला लजपतराय", "टिळक", "नेहरू", "गांधी"], "answer": "लाला लजपतराय"},
+  {"question": "'नॅशनल हेरॉल्ड' या वृत्तपत्राचे संपादक कोण होते?", "options": ["पंडित जवाहरलाल नेहरू", "सुभाषचंद्र बोस", "गांधी", "टिळक"], "answer": "पंडित जवाहरलाल नेहरू"},
+  {"question": "'फॉरवर्ड' (मासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["सुभाषचंद्र बोस", "पंडित जवाहरलाल नेहरू", "गांधी", "टिळक"], "answer": "सुभाषचंद्र बोस"},
+  {"question": "'इंडियन सोशालिस्ट' या वृत्तपत्राचे संपादक कोण होते?", "options": ["श्यामजी कृष्ण वर्मा", "टिळक", "गांधी", "नेहरू"], "answer": "श्यामजी कृष्ण वर्मा"},
+  {"question": "'रास्त गोफ्तर' या वृत्तपत्राचे संपादक कोण होते?", "options": ["दादाभाई नौरोजी", "राजा राममोहन रॉय", "फिरोजशाह मेहता", "टिळक"], "answer": "दादाभाई नौरोजी"},
+  {"question": "'व्हाईस ऑफ इंडिया' या वृत्तपत्राचे संपादक कोण होते?", "options": ["दादाभाई नौरोजी", "राजा राममोहन रॉय", "फिरोजशाह मेहता", "टिळक"], "answer": "दादाभाई नौरोजी"},
+  {"question": "'बंगाली' या वृत्तपत्राचे संपादक कोण होते?", "options": ["सुरेंद्रनाथ बॅनर्जी", "टिळक", "गांधी", "नेहरू"], "answer": "सुरेंद्रनाथ बॅनर्जी"},
+  {"question": "'इंडिपेंडंट इंडिया' या वृत्तपत्राचे संपादक कोण होते?", "options": ["मानवेंद्रनाथ रॉय", "टिळक", "गांधी", "नेहरू"], "answer": "मानवेंद्रनाथ रॉय"},
+  {"question": "'द व्हॅनगार्ड' या वृत्तपत्राचे संपादक कोण होते?", "options": ["मानवेंद्रनाथ रॉय", "टिळक", "गांधी", "नेहरू"], "answer": "मानवेंद्रनाथ रॉय"},
+  {"question": "'उद्बोधक' (बंगाली) या वृत्तपत्राचे संपादक कोण होते?", "options": ["स्वामी विवेकानंद", "टिळक", "गांधी", "नेहरू"], "answer": "स्वामी विवेकानंद"},
+  {"question": "'प्रबुद्ध भारत' (इंग्रजी) या वृत्तपत्राचे संपादक कोण होते?", "options": ["स्वामी विवेकानंद", "टिळक", "गांधी", "नेहरू"], "answer": "स्वामी विवेकानंद"},
+  {"question": "'नवजीवन' (गुजराती साप्ताहिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["महात्मा गांधी", "नेहरू", "साने गुरुजी", "टिळक"], "answer": "महात्मा गांधी"},
+  {"question": "'हरिजन' या वृत्तपत्राचे संपादक कोण होते?", "options": ["महात्मा गांधी", "नेहरू", "साने गुरुजी", "टिळक"], "answer": "महात्मा गांधी"},
+  {"question": "'यंग इंडिया' या वृत्तपत्राचे संपादक कोण होते?", "options": ["महात्मा गांधी", "नेहरू", "साने गुरुजी", "टिळक"], "answer": "महात्मा गांधी"},
+  {"question": "'इंडियन ओपिनियन' या वृत्तपत्राचे संपादक कोण होते?", "options": ["महात्मा गांधी", "नेहरू", "साने गुरुजी", "टिळक"], "answer": "महात्मा गांधी"},
+  {"question": "'मिरात-उल-अखबार' या वृत्तपत्राचे संपादक कोण होते?", "options": ["राजा राममोहन रॉय", "दादाभाई नौरोजी", "टिळक", "गांधी"], "answer": "राजा राममोहन रॉय"},
+  {"question": "'समाचार चंद्रिका' या वृत्तपत्राचे संपादक कोण होते?", "options": ["राजा राममोहन रॉय", "दादाभाई नौरोजी", "टिळक", "गांधी"], "answer": "राजा राममोहन रॉय"},
+  {"question": "'बंगाल हेरॉल्ड' या वृत्तपत्राचे संपादक कोण होते?", "options": ["राजा राममोहन रॉय", "दादाभाई नौरोजी", "टिळक", "गांधी"], "answer": "राजा राममोहन रॉय"},
+  {"question": "'संवाद कौमुदी' या वृत्तपत्राचे संपादक कोण होते?", "options": ["राजा राममोहन रॉय", "दादाभाई नौरोजी", "टिळक", "गांधी"], "answer": "राजा राममोहन रॉय"},
+  {"question": "'कैवारी' या वृत्तपत्राचे संपादक कोण होते?", "options": ["भास्कर जाधव", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "भास्कर जाधव"},
+  {"question": "'भाषांतर' (मासिक) या वृत्तपत्राचे संपादक कोण होते?", "options": ["वि. का. राजवाडे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "वि. का. राजवाडे"},
+  {"question": "'मराठवाडा' या वृत्तपत्राचे संपादक कोण होते?", "options": ["सदाशिव विश्वनाथ पाठक", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "सदाशिव विश्वनाथ पाठक"},
+  {"question": "'महाराष्ट्र केसरी' या वृत्तपत्राचे संपादक कोण होते?", "options": ["डॉ. पंजाबराव देशमुख", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "डॉ. पंजाबराव देशमुख"},
+  {"question": "'अखंड भारत' या वृत्तपत्राचे संपादक कोण होते?", "options": ["भाई महादेवराव बागल", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "भाई महादेवराव बागल"},
+  {"question": "'शतपत्रे' या वृत्तपत्राचे संपादक कोण होते?", "options": ["गोपाळ हरी देशमुख", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "गोपाळ हरी देशमुख"},
+  {"question": "'टाईम्स ऑफ इंडिया' या वृत्तपत्राचे संपादक कोण होते?", "options": ["रॉबर्ट नाईट", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "रॉबर्ट नाईट"},
+  {"question": "'हितवाद' या वृत्तपत्राचे संपादक कोण होते?", "options": ["गोपाळ कृष्ण गोखले", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "गोपाळ कृष्ण गोखले"},
+  {"question": "'युगांतर' या वृत्तपत्राचे संपादक कोण होते?", "options": ["भूपेंद्र दत्त", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "भूपेंद्र दत्त"},
+  {"question": "'न्यू इंडिया' या वृत्तपत्राचे संपादक कोण होते?", "options": ["ॲनी बेझंट", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "ॲनी बेझंट"},
+  {"question": "'कॉमनवेल्थ' या वृत्तपत्राचे संपादक कोण होते?", "options": ["ॲनी बेझंट", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "ॲनी बेझंट"},
+  {"question": "'ज्ञानसिंधू' या वृत्तपत्राचे संपादक कोण होते?", "options": ["तात्या छत्रे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "तात्या छत्रे"},
+  {"question": "'बामबोधिनी' या वृत्तपत्राचे संपादक कोण होते?", "options": ["उमेशचंद्र दत्त", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "उमेशचंद्र दत्त"},
+  {"question": "'अबलाबांधव' या वृत्तपत्राचे संपादक कोण होते?", "options": ["द्वारकानाथ गांगुली", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "द्वारकानाथ गांगुली"},
+  {"question": "'भारती' या वृत्तपत्राचे संपादक कोण होते?", "options": ["द्विजेंद्रनाथ टागोर", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "द्विजेंद्रनाथ टागोर"},
+  {"question": "'वसुमती' या वृत्तपत्राचे संपादक कोण होते?", "options": ["हेमचंद्र घोष", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "हेमचंद्र घोष"},
+  {"question": "'सदेश' या वृत्तपत्राचे संपादक कोण होते?", "options": ["अच्युत बळवंत कोल्हटकर", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "अच्युत बळवंत कोल्हटकर"},
+  {"question": "'आत्मोद्धार' या वृत्तपत्राचे संपादक कोण होते?", "options": ["एस. एन. चौधरी", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "एस. एन. चौधरी"},
+  {"question": "'भारत' या वृत्तपत्राचे संपादक कोण होते?", "options": ["काकासाहेब कर्वे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "काकासाहेब कर्वे"},
+  {"question": "'सेवक' या वृत्तपत्राचे संपादक कोण होते?", "options": ["एल. एन. मेढे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "एल. एन. मेढे"},
+  {"question": "'दलित भारत' या वृत्तपत्राचे संपादक कोण होते?", "options": ["धनाजी बिराडे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "धनाजी बिराडे"},
+  {"question": "'लीडर' या वृत्तपत्राचे संपादक कोण होते?", "options": ["पंडित मदन मोहन मालवीय", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "पंडित मदन मोहन मालवीय"},
+  {"question": "'अल-हिलाल' या वृत्तपत्राचे संपादक कोण होते?", "options": ["अब्दुल कलाम आझाद", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "अब्दुल कलाम आझाद"},
+  {"question": "'प्रबोधन' या वृत्तपत्राचे संपादक कोण होते?", "options": ["केशव ठाकरे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "केशव ठाकरे"},
+  {"question": "'नवयुग' या वृत्तपत्राचे संपादक कोण होते?", "options": ["आचार्य अत्रे", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "आचार्य अत्रे"},
+  {"question": "'प्रभात' या वृत्तपत्राचे संपादक कोण होते?", "options": ["भालचंद्र कोठारी", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "भालचंद्र कोठारी"},
+  {"question": "'सत्याग्रह' या वृत्तपत्राचे संपादक कोण होते?", "options": ["महात्मा गांधी", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "महात्मा गांधी"},
+  {"question": "'अमृत बाजार पत्रिका' या वृत्तपत्राचे संपादक कोण होते?", "options": ["मोतीलाल घोष", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "मोतीलाल घोष"},
+  {"question": "'सुलभ समाचार' या वृत्तपत्राचे संपादक कोण होते?", "options": ["केशवचंद्र सेन", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "केशवचंद्र सेन"},
+  {"question": "'नेटिव्ह ओपिनियन' या वृत्तपत्राचे संपादक कोण होते?", "options": ["वि. ना. मंडलिक", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "वि. ना. मंडलिक"},
+  {"question": "'भाला' या वृत्तपत्राचे संपादक कोण होते?", "options": ["भास्कर बळवंत भोपटकर", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "भास्कर बळवंत भोपटकर"},
+  {"question": "'तरुण मराठा' या वृत्तपत्राचे संपादक कोण होते?", "options": ["दिनकरराव जवळकर", "साने गुरुजी", "आंबेडकर", "टिळक"], "answer": "दिनकरराव जवळकर"}
 ];
 
-    let currentIndex = 0;
+    let currentIdx = 0;
+
+    function showAbout() {
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('about-page').style.display = 'block';
+    }
+
+    function showQuiz() {
+        document.getElementById('quiz-container').style.display = 'block';
+        document.getElementById('about-page').style.display = 'none';
+    }
 
     function loadQuestion() {
-        const q = questions[currentIndex];
-        document.getElementById('question').innerText = `Q${currentIndex + 1}: ${q.question}`;
-        const optionsDiv = document.getElementById('options');
-        optionsDiv.innerHTML = '';
+        const q = quizData[currentIdx];
+        document.getElementById('question').innerText = "Q" + (currentIdx + 1) + ": " + q.question;
+        const optDiv = document.getElementById('options');
+        optDiv.innerHTML = '';
         q.options.forEach(opt => {
             const btn = document.createElement('button');
-            btn.className = 'option-btn';
+            btn.className = 'btn';
             btn.innerText = opt;
-            btn.onclick = () => alert(opt === q.answer ? "बरोबर! ✅" : "चुकीचे! ❌");
-            optionsDiv.appendChild(btn);
+            btn.onclick = () => checkAnswer(btn, opt);
+            optDiv.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(btn, selected) {
+        const q = quizData[currentIdx];
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(b => {
+            if (b.innerText === q.answer) b.classList.add('correct');
+            else if (b.innerText === selected) b.classList.add('wrong');
+            b.disabled = true;
         });
     }
 
     function nextQuestion() {
-        if (currentIndex < questions.length - 1) { currentIndex++; loadQuestion(); }
+        if(currentIdx < quizData.length - 1) { currentIdx++; loadQuestion(); }
     }
 
     function prevQuestion() {
-        if (currentIndex > 0) { currentIndex--; loadQuestion(); }
+        if(currentIdx > 0) { currentIdx--; loadQuestion(); }
+    }
+
+    function googleSearch() {
+        const query = quizData[currentIdx].question;
+        window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
     }
 
     loadQuestion();
 </script>
-
 </body>
 </html>
