@@ -58,7 +58,7 @@
     let score = 0, currentQ = 0, currentItems = [], currentFile = "";
     let startTime = null, timerInterval = null;
 
-    const files = ["quiz.json", "quiz2.json"]; // येथे तुमच्या फाईल्सची नावे द्या
+    const files = ["data.json", "quiz.json", "quiz2.json"];
 
     async function init() {
         const navbar = document.getElementById('navbar');
@@ -114,10 +114,10 @@
         const quizCard = document.getElementById('quiz-card');
         quizCard.innerHTML = `
             <div style="display:flex; align-items:center;">
-                <h3>प्रश्न ${currentQ + 1} / ${currentItems.length}</h3>
+                <h3 style="font-weight: 800;">प्रश्न ${currentQ + 1} / ${currentItems.length}</h3>
                 <button class="star-btn" onclick="toggleBookmark('${qText.replace(/'/g, "\\'")}')">⭐</button>
             </div>
-            <p>${qText}</p>
+            <p style="font-weight: 700; font-size: 1.15rem; margin-bottom: 20px;">${qText}</p>
             <div id="options-container"></div>
             <a class="google-btn" href="https://www.google.com/search?q=${encodeURIComponent(qText)}" target="_blank">🔍 Google वर शोधा</a>
             <div class="controls">
