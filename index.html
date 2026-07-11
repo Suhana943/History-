@@ -7,26 +7,27 @@
     <style>
         :root { --primary: #6366f1; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; }
         .dark-mode { --primary: #818cf8; --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; transition: 0.3s; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; }
         
-        .navbar { background: var(--card-bg); padding: 15px; display: flex; gap: 10px; overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2e8f0; }
-        .nav-btn { background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+        .navbar { background: var(--card-bg); padding: 20px; display: flex; gap: 15px; overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2e8f0; }
+        .nav-btn { background: #e2e8f0; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 700; white-space: nowrap; font-size: 1rem; }
         .nav-btn.active { background: var(--primary); color: white; }
         
-        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; }
-        #progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        .container { max-width: 700px; margin: 40px auto; padding: 0 30px; }
+        #progress-bar { height: 12px; background: #e2e8f0; border-radius: 6px; margin-bottom: 30px; overflow: hidden; }
         #progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
         
-        .quiz-card { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; }
+        .quiz-card { background: var(--card-bg); padding: 50px; border-radius: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .btn { display: block; width: 100%; padding: 22px; margin: 15px 0; border: 2px solid #e2e8f0; border-radius: 18px; background: transparent; color: var(--text); cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: 0.2s; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
         
-        .controls { display: flex; gap: 10px; margin-top: 20px; }
-        .nav-control { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; background: #e2e8f0; }
-        .google-btn { display: block; width: 100%; padding: 12px; margin-top: 10px; text-align: center; text-decoration: none; border: 2px solid var(--primary); color: var(--primary); border-radius: 12px; font-weight: bold; }
+        .controls { display: flex; gap: 15px; margin-top: 30px; }
+        .nav-control { flex: 1; padding: 18px; border: none; border-radius: 18px; font-weight: bold; cursor: pointer; background: #e2e8f0; font-size: 1.1rem; }
+        .google-btn { display: block; width: 100%; padding: 18px; margin-top: 20px; text-align: center; text-decoration: none; border: 2px solid var(--primary); color: var(--primary); border-radius: 18px; font-weight: bold; font-size: 1.1rem; }
         
-        #fab-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--primary); color: white; border: none; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4); z-index: 1000; }
-        #jump-box { position: fixed; bottom: 90px; right: 20px; background: var(--card-bg); padding: 15px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 1000; }
-        .star-btn { background: none; border: none; font-size: 24px; cursor: pointer; margin-left: auto; }
+        #fab-btn { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; background-color: var(--primary); color: white; border: none; border-radius: 50%; cursor: pointer; box-shadow: 0 6px 15px rgba(99, 102, 241, 0.5); z-index: 1000; font-size: 20px; }
+        #jump-box { position: fixed; bottom: 110px; right: 30px; background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); display: none; z-index: 1000; }
+        .star-btn { background: none; border: none; font-size: 30px; cursor: pointer; margin-left: auto; }
     </style>
 </head>
 <body>
@@ -44,7 +45,7 @@
 
 <button id="fab-btn" onclick="toggleInput()">Q#</button>
 <div id="jump-box">
-    <input type="number" id="q-number" placeholder="Enter Q No." onkeypress="handleEnter(event)">
+    <input type="number" id="q-number" placeholder="Enter Q No." style="padding:10px; border-radius:10px; border:1px solid #ccc;" onkeypress="handleEnter(event)">
 </div>
 
 <script>
@@ -59,6 +60,7 @@
             btn.onclick = () => loadQuiz(file, btn);
             navbar.appendChild(btn);
         });
+        startTime = Date.now();
         loadQuiz(files[0], document.querySelector('.nav-btn'));
     }
 
@@ -69,7 +71,6 @@
         let data = await res.json();
         currentItems = data.quiz || data;
         currentQ = parseInt(localStorage.getItem(file + '_q')) || 0;
-        startTime = Date.now(); // Timer start
         render();
     }
 
@@ -86,10 +87,23 @@
                 <button class="star-btn" onclick="toggleBookmark('${qText.replace(/'/g, "\\'")}')">⭐</button>
             </div>
         `;
+        
         (qData.o || qData.options).forEach(opt => {
             let btn = document.createElement('button');
-            btn.className = 'btn'; btn.innerText = opt;
-            btn.onclick = () => { if(opt === (qData.a || qData.answer)) score += 10; saveProgress(); };
+            btn.className = 'btn'; 
+            btn.innerText = opt;
+            btn.onclick = () => {
+                document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+                if(opt === (qData.a || qData.answer)) {
+                    btn.style.background = "#22c55e"; 
+                    btn.style.color = "white";
+                    score += 10;
+                } else {
+                    btn.style.background = "#ef4444"; 
+                    btn.style.color = "white";
+                }
+                saveProgress();
+            };
             quizCard.appendChild(btn);
         });
 
@@ -108,8 +122,8 @@
         let s = timeTaken % 60;
         document.getElementById('quiz-card').innerHTML = `
             <h2>सत्र पूर्ण! 🎉</h2>
-            <p>Score: ${score}</p>
-            <p>⏱️ Time: ${m} min ${s} sec</p>
+            <p style="font-size:1.2rem;">आपका स्कोर: ${score}</p>
+            <p style="font-size:1.2rem;">⏱️ कुल समय: ${m} min ${s} sec</p>
             <button class="btn" onclick="resetQuiz()">Re-start</button>
         `;
     }
