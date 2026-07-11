@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Quiz App</title>
+    <title>Modern Quiz App with History</title>
     <style>
         :root { --primary: #6366f1; --bg: #f8fafc; --card-bg: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
@@ -28,18 +28,8 @@
         .google-btn { background: #ffffff; color: var(--primary); border: 2px solid var(--primary); padding: 14px; width: 100%; border-radius: 16px; margin-top: 10px; text-decoration: none; display: block; text-align: center; font-weight: 600; }
 
         /* FAB Styles */
-        #fab-btn {
-            position: fixed; bottom: 20px; right: 20px;
-            width: 60px; height: 60px; background-color: var(--primary);
-            color: white; border: none; border-radius: 50%;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
-            font-weight: bold; font-size: 1.2rem; z-index: 1000;
-        }
-        #jump-box {
-            position: fixed; bottom: 90px; right: 20px; background: white;
-            padding: 15px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            display: none; z-index: 1000; border: 1px solid #e2e8f0;
-        }
+        #fab-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--primary); color: white; border: none; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4); font-weight: bold; font-size: 1.2rem; z-index: 1000; }
+        #jump-box { position: fixed; bottom: 90px; right: 20px; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; z-index: 1000; border: 1px solid #e2e8f0; }
         #jump-box input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 120px; }
     </style>
 </head>
@@ -78,8 +68,17 @@
         let res = await fetch(fileName);
         let data = await res.json();
         currentItems = data.quiz || data;
-        currentQ = 0;
+        
+        // Load Saved History
+        currentQ = parseInt(localStorage.getItem(fileName + '_q')) || 0;
+        score = parseInt(localStorage.getItem(fileName + '_score')) || 0;
+        document.getElementById('points').innerText = "Points: " + score;
         render();
+    }
+
+    function saveProgress(fileName) {
+        localStorage.setItem(fileName + '_q', currentQ);
+        localStorage.setItem(fileName + '_score', score);
     }
 
     function render() {
@@ -96,7 +95,6 @@
                 if(opt === (qData.a || qData.answer)) {
                     btn.classList.add('correct');
                     score += 10;
-                    document.getElementById('points').innerText = "Points: " + score;
                 } else {
                     btn.classList.add('wrong');
                     let gLink = document.createElement('a');
@@ -106,18 +104,20 @@
                     gLink.innerText = "🔍 Google वर शोधा";
                     quizCard.appendChild(gLink);
                 }
+                document.getElementById('points').innerText = "Points: " + score;
+                let activeFile = document.querySelector('.nav-btn.active').innerText;
+                saveProgress(activeFile);
                 
                 let next = document.createElement('button');
                 next.className = 'next-btn';
                 next.innerText = "Next Question ➡️";
-                next.onclick = () => { currentQ++; if(currentQ < currentItems.length) render(); else quizCard.innerHTML = "सत्र पूर्ण! 🎉"; };
+                next.onclick = () => { currentQ++; if(currentQ < currentItems.length) { saveProgress(activeFile); render(); } else quizCard.innerHTML = "सत्र पूर्ण! 🎉"; };
                 quizCard.appendChild(next);
             };
             quizCard.appendChild(btn);
         });
     }
 
-    // FAB Logic
     function toggleInput() {
         const box = document.getElementById("jump-box");
         box.style.display = (box.style.display === "block") ? "none" : "block";
@@ -131,7 +131,7 @@
                 render();
                 toggleInput();
             } else {
-                alert("Sahi question number dalein (1 to " + currentItems.length + ")");
+                alert("Sahi question number dalein!");
             }
         }
     }
